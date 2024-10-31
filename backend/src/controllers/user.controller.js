@@ -1,19 +1,29 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
+const bcrypt=require("bcrypt")
+const zod=require("zod")
 import {ApiError} from "../utils/ApiError.js"
-//import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
-import {prisma} from "../db/index.js";
+import {amber} from "../db/index.js";
+import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 
 
 const generateAccessAndRefereshTokens = async(userId) =>{
     try {
-        const user = await prisma.User.findById(userId)
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+        const user = await amber.user.findUnique({
+            where: {
+              id: userId,
+            },
+          });
+          
+        const accessToken = generateAccessToken(user)
+        const refreshToken = generateRefreshToken(user)
 
-        user.refreshToken = refreshToken
-        await user.save({ validateBeforeSave: false })
+        await prisma.user.update({
+            where: { id: userId },
+            data: { refresh_token: refreshToken }
+          });
 
         return {accessToken, refreshToken}
 
@@ -22,6 +32,107 @@ const generateAccessAndRefereshTokens = async(userId) =>{
     }
 }
 
+const getUserProfile = asyncHandler(async(req, res) => {
+    const {username} = req.params
+
+    try {
+        const user = await amber.user.findUnique({
+          where: {
+            username: username
+          },
+          select: {
+            username: true,
+            profilepicture: true
+          }
+        });
+    
+        // Check if user exists
+        if (!user) {
+          return res.status(404).json(new ApiResponse(404, null, 'User not found'));
+        }
+    
+        // Send success response if user is found
+        return res
+            .status(200)
+            .json(
+            new ApiResponse(200, user, 'User profile fetched successfully')
+        );
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        
+        // Handle any server errors
+        return res.status(500).json(
+          new ApiResponse(500, null, 'An error occurred while fetching user profile')
+        );
+      }
+})
+
+const loginUser = asyncHandler(async (req, res) =>{
+    // req body -> data
+    // username or email
+    //find the user
+    //password check
+    //access and referesh token
+    //send cookie
+
+    const {email, username, pass} = req.body
+
+    if (!username && !email) {
+        throw new ApiError(400, "username or email is required")
+    }
+    
+    const user = await amber.user.findFirst({
+        where: {
+          OR: [
+            { username: username },
+            { email: email }
+          ]
+        },
+      });
+      
+
+    if (!user) {
+        throw new ApiError(404, "User does not exist sign up first")
+    }
+
+    const is_pass= await bcrypt.compare(pass,user.password);
+
+   if (!is_pass) {
+    throw new ApiError(401, "Invalid user credentials")
+    }
+
+   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user.id)
+
+    const loggedInUser = await amber.user.findUnique({
+        where:{
+            id:user.id
+        },
+        omit:{
+            password:true,
+            refresh_token:true
+        }
+    })
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(
+            200, 
+            {
+                user: loggedInUser, accessToken, refreshToken
+            },
+            "User logged In Successfully"
+        )
+    )
+
+})
 
 const registerUser = asyncHandler( async (req, res) => {
     // get user details from frontend
@@ -97,89 +208,36 @@ const registerUser = asyncHandler( async (req, res) => {
 
 } )
 
-const loginUser = asyncHandler(async (req, res) =>{
-    // req body -> data
-    // username or email
-    //find the user
-    //password check
-    //access and referesh token
-    //send cookie
-
-    const {email, username, password} = req.body
-    console.log(email);
-
-    if (!username && !email) {
-        throw new ApiError(400, "username or email is required")
-    }
+const logoutUser = asyncHandler(async(req, res) => {
+    try {
+        // Update the user and set refreshToken to null
+        const updatedUser = await amber.user.update({
+          where: 
+          { id: req.user.id },
+          data: 
+          { refreshToken: null },
+        });
     
-    // Here is an alternative of above code based on logic discussed in video:
-    // if (!(username || email)) {
-    //     throw new ApiError(400, "username or email is required")
-        
-    // }
-
-    const user = await User.findOne({
-        $or: [{username}, {email}]
-    })
-
-    if (!user) {
-        throw new ApiError(404, "User does not exist")
-    }
-
-   const isPasswordValid = await user.isPasswordCorrect(password)
-
-   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials")
-    }
-
-   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
-
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
-    return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-        new ApiResponse(
-            200, 
-            {
-                user: loggedInUser, accessToken, refreshToken
-            },
-            "User logged In Successfully"
-        )
-    )
-
+        // Cookie options for secure and httpOnly cookies
+        const options = {
+          httpOnly: true,
+          secure: true,
+        };
+    
+        // Clear cookies and return response
+        return res
+          .status(200)
+          .clearCookie('accessToken', options)
+          .clearCookie('refreshToken', options)
+          .json(new ApiResponse(200, {}, 'User logged out'));
+      } catch (error) {
+        console.error('Logout failed:', error);
+        return res.status(500).json(new ApiResponse(500, {}, 'Logout failed'));
+      }
 })
 
-const logoutUser = asyncHandler(async(req, res) => {
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1 // this removes the field from document
-            }
-        },
-        {
-            new: true
-        }
-    )
-
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
-    return res
-    .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logged Out"))
+const editProfile=asyncHandler(async(req,res)=>{
+    
 })
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -352,26 +410,6 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     )
 })
 
-
-const getUserProfile = asyncHandler(async(req, res) => {
-    const {username} = req.params
-
-    if (!username?.trim()) {
-        throw new ApiError(400, "username is missing")
-    }
-
-    
-
-    if (!channel?.length) {
-        throw new ApiError(404, "channel does not exists")
-    }
-
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, channel[0], "User channel fetched successfully")
-    )
-})
 
 const getWatchHistory = asyncHandler(async(req, res) => {
     const user = await User.aggregate([
