@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-const bcrypt=require("bcrypt")
-const zod=require("zod")
+import bcrypt from "bcrypt"
+import zod from "zod"
 import {ApiError} from "../utils/ApiError.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
