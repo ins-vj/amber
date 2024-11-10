@@ -26,12 +26,31 @@ app.post('/upload', upload.single('video'), async (req, res) => {
         
         const filePath = req.file.path; // Path where multer saves the file
 
+        const options = {
+            // public_id: "mountain",
+            resource_type: "video",
+            type: "upload",
+            eager: [
+              { streaming_profile: "full_hd", format: "m3u8" },
+              {
+                format: "mp4",
+                transformation: [{ quality: "auto" }],
+              },
+            ],
+            eager_async: true,
+            eager_notification_url:
+              "https://webhook.site/e22fcd34-dfb7-431d-88f6-a1db871b4adc",
+          };
+          
+
         // Upload video to Cloudinary
-        const result = await cloudinary.uploader.upload(filePath, { resource_type: 'video' });
+        const result = await cloudinary.uploader.upload(filePath, options);
         const videoUrlCloudinary = result.secure_url;
+        const publicUrl = result.public_id;
+        console.log(result)
 
         // Save the Cloudinary video URL to the Neon database
-        await saveVideoUrl(videoUrlCloudinary);
+        await saveVideoUrl(videoUrlCloudinary,publicUrl);
 
         // Delete the temporary file from local storage
         await fs.promises.unlink(filePath);

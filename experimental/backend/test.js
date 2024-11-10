@@ -29,12 +29,12 @@ const testConnection = async () => {
 testConnection();
 
 // Function to save video URL
-export const saveVideoUrl = async (videoUrl) => {
+export const saveVideoUrl = async (videoUrl , publicUrl) => {
     const client = await pool.connect(); // Get a client from the pool
     try {
-        const query = 'INSERT INTO videos (url) VALUES ($1)'; // Use parameterized query
-        await client.query(query, [videoUrl]); // Pass videoUrl as a parameter
-        console.log('Video URL saved:', videoUrl);
+        const query = 'INSERT INTO videos (url, public_url) VALUES ($1, $2)'; // Use parameterized query
+        await client.query(query, [videoUrl,publicUrl]); // Pass videoUrl as a parameter
+        console.log('Video URL and public-url saved saved:', videoUrl);
     } catch (error) {
         console.error('Error saving video URL:', error);
         throw error;
