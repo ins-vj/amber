@@ -1,10 +1,11 @@
 // src/app/api/auth/token/route.ts
+
 import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   try {
-    // Manually handle session and access token extraction for App Router
+    // Get the session using `getSession` and pass the request object
     const session = await getSession(req);
 
     if (!session || !session.accessToken) {
@@ -12,8 +13,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Access token found, return it
-    return NextResponse.json({ accessToken: session.accessToken });
+    console.log(session);
+
+    return NextResponse.json({ accessToken: session.idToken });
   } catch (error) {
+    console.error('Error retrieving session or access token:', error);
     return NextResponse.json({ error: 'Failed to fetch access token' }, { status: 500 });
   }
 }
