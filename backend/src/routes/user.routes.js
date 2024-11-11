@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { 
+    testing,
     loginUser, 
     logoutUser, 
     registerUser, 
@@ -13,11 +14,12 @@ import {
     updateAccountDetails
 } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { jwtCheck,verifyJWT } from "../middlewares/auth.middleware.js";
 
 
 const router = Router()
 
+router.route("/testing").post(jwtCheck,verifyJWT,testing)
 router.route("/:username").get(verifyJWT, getUserProfile)
 router.route("/register").post(
     upload.fields([

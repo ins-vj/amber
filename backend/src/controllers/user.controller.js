@@ -9,6 +9,12 @@ import {amber} from "../db/index.js";
 import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 
 
+const testing=asyncHandler(async(req,res)=>{
+    const user=req.user;
+    return res.status(201).json(
+        new ApiResponse(200, user, "User registered Successfully")
+    )
+})
 const generateAccessAndRefereshTokens = async(userId) =>{
     try {
         const user = await amber.user.findUnique({
@@ -467,6 +473,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
 
 
 export {
+    testing,
     registerUser,
     loginUser,
     logoutUser,
