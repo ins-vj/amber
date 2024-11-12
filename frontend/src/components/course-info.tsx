@@ -1,6 +1,6 @@
 "use client"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Star, Clock, Film, FileText, Award, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -59,6 +59,22 @@ const courseSections = [
 export default function CourseInfo() {
   const [expandedSections, setExpandedSections] = useState<number[]>([])
   const [showAllSections, setShowAllSections] = useState(false)
+  const [isSticky, setIsSticky] = useState(true)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const footer = document.querySelector(".footer")
+      const pricingCard = document.querySelector(".pricing-card")
+      if (footer && pricingCard) {
+        const footerTop = footer.getBoundingClientRect().top
+        const cardBottom = pricingCard.getBoundingClientRect().bottom
+        setIsSticky(cardBottom < footerTop)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const toggleSection = (index: number) => {
     setExpandedSections(prev =>
@@ -76,7 +92,7 @@ export default function CourseInfo() {
       {/* Course Banner */}
       <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
         <Image
-          src="/placeholder.svg?height=256&width=1024"
+          src="/images/8469936.jpg"
           alt="Course Banner"
           layout="fill"
           objectFit="cover"
@@ -163,8 +179,19 @@ export default function CourseInfo() {
 
         {/* Pricing Card */}
         <div className="md:col-span-1">
-          <Card className="sticky top-4">
-            <CardContent className="p-6 space-y-6">
+          <Card className={`pricing-card ${isSticky ? "sticky" : ""}`} style={{ top: isSticky ? '10vh' : 'auto' }}>
+            <CardContent className="p-6 space-y-6 w-[560]">
+              <div className="promotional-video">
+                <iframe
+                  width="560"
+                  height="315"
+                  src="https://www.youtube.com/embed/-vI_WMUBXcA?list=RDG_LSoVwzmI4"
+                  title="Promotional Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
               <div className="text-4xl font-bold">₹3,099</div>
               <Button className="w-full text-lg">Add to cart</Button>
               <p className="text-center text-sm text-gray-600">30-Day Money-Back Guarantee</p>
@@ -187,41 +214,15 @@ export default function CourseInfo() {
                 </div>
               </div>
             </CardContent>
+            
           </Card>
-        </div>
-      </div>
+          <div className="h-[100vh]">mjje mjje</div>
 
-      {/* Instructor */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Instructor</h2>
-          <div className="flex items-start space-x-4">
-            <Image
-              src="/placeholder.svg?height=100&width=100"
-              alt="Instructor"
-              width={100}
-              height={100}
-              className="rounded-full"
-            />
-            <div>
-              <h3 className="text-xl font-semibold">Dr. Angela Yu</h3>
-              <p className="text-gray-600">Developer and Lead Instructor</p>
-              <div className="flex items-center mt-2">
-                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                <span className="ml-1 text-sm text-gray-600">4.7 Instructor Rating</span>
-              </div>
-              <div className="flex items-center mt-1">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                <span className="ml-1 text-sm text-gray-600">2,918,393 Students</span>
-              </div>
-              <div className="flex items-center mt-1">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                <span className="ml-1 text-sm text-gray-600">7 Courses</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+
+      </div>
+      {/* Footer */}
+      <div className="footer h-[100vh] mt-12">Footer Content</div>
     </div>
   )
 }
