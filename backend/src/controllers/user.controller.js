@@ -12,7 +12,7 @@ import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 const testing=asyncHandler(async(req,res)=>{
     const user=req.user;
     return res.status(201).json(
-        new ApiResponse(200, user, "User registered Successfully")
+        new ApiResponse(200,user, "User Registered Successfully")
     )
 })
 const generateAccessAndRefereshTokens = async(userId) =>{

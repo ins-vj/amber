@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import {ApiError} from './utils/ApiError.js'
 
 const app = express()
 
@@ -17,5 +18,27 @@ app.use(cookieParser())
 import userRouter from './routes/user.routes.js'
 
 app.use("/api/v1/user", userRouter)
+
+app.use((err, req, res, next) => {
+  // Check if the error is an instance of ApiError
+  if (err instanceof ApiError) {
+    res.status(err.statusCode).json({
+      statusCode: err.statusCode,
+      data: err.data,
+      success: err.success,
+      errors: err.errors.length ? err.errors : [err.message],
+      message: err.message,
+    });
+  } else {
+    // Fallback for unexpected errors
+    res.status(500).json({
+      statusCode: 500,
+      data: null,
+      success: false,
+      errors: ["Internal Server Error"],
+      message: "Something went wrong",
+    });
+  }
+});
 
 export{app}
