@@ -3,7 +3,6 @@
 import React, { useState } from 'react'
 import { FaTrophy, FaStar, FaMedal } from 'react-icons/fa'
 import Image from 'next/image'
-// import { Progress } from "@/components/ui/progress"
 
 const Dashboard: React.FC = () => {
   const [profile, setProfile] = useState({
@@ -12,7 +11,8 @@ const Dashboard: React.FC = () => {
     education: "10th Grade",
     profilePicture: "/placeholder.svg?height=100&width=100"
   })
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditingInfo, setIsEditingInfo] = useState(false)
+  const [isEditingPicture, setIsEditingPicture] = useState(false)
 
   const quizzes = [
     { title: "Quiz 1", description: "An introductory quiz covering basic concepts." },
@@ -46,10 +46,6 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const toggleEditing = () => {
-    setIsEditing(!isEditing)
-  }
-
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-100">
       {/* Left compartment */}
@@ -63,29 +59,39 @@ const Dashboard: React.FC = () => {
             height={100}
             className="rounded-full"
           />
-          {isEditing && (
+          {isEditingPicture && (
             <input
               type="file"
               onChange={handleImageChange}
-              className="mt-2 text-sm"
+              className="mb-10 mb-10 text-sm"  // Increased margin for spacing
               accept="image/*"
             />
           )}
         </div>
-        {/* Edit Profile Button */}
+
+        {/* Edit Profile Picture Button */}
         <button
-          onClick={toggleEditing}
-          className="w-full mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          onClick={() => setIsEditingPicture(!isEditingPicture)}
+          className="w-full mt-8 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          {isEditing ? "Update Profile" : "Edit Profile"}
+          {isEditingPicture ? "Update Picture" : "Edit Picture"}
+        </button>
+        
+        {/* Edit Profile Information Button */}
+        <button
+          onClick={() => setIsEditingInfo(!isEditingInfo)}
+          className="w-full mt-8 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          {isEditingInfo ? "Save Info" : "Edit Info"}
         </button>
       </div>
 
       {/* Right compartment */}
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="mb-4">
-          {isEditing ? (
+          {isEditingInfo ? (
             <>
+              <label className="block font-semibold mb-1">Name</label>
               <input
                 type="text"
                 name="name"
@@ -94,6 +100,8 @@ const Dashboard: React.FC = () => {
                 placeholder="User Name"
                 className="border rounded p-2 w-full mb-2"
               />
+              
+              <label className="block font-semibold mb-1">Email</label>
               <input
                 type="email"
                 name="email"
@@ -102,6 +110,8 @@ const Dashboard: React.FC = () => {
                 placeholder="Email"
                 className="border rounded p-2 w-full mb-2"
               />
+              
+              <label className="block font-semibold mb-1">Education Level</label>
               <input
                 type="text"
                 name="education"
@@ -142,7 +152,6 @@ const Dashboard: React.FC = () => {
                 className="rounded-lg mb-4"
               />
               <h4 className="font-medium mb-2">{course.name}</h4>
-              {/* <Progress value={course.progress} className="h-2" /> */}
               <p className="text-sm text-gray-600 mt-2">{course.progress}% Complete</p>
             </div>
           ))}

@@ -65,7 +65,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({ amount }) => {
 
   return (
     <button onClick={handlePayment} className="pay-button">
-      Pay ₹{amount}
+     Subscription 
     </button>
   );
 };

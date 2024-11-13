@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { Star, Clock, Film, FileText, Award, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import RazorpayCheckout from '@/components/RazorpayCheckout';
+
 
 const courseSections = [
   {
@@ -55,6 +57,8 @@ const courseSections = [
     content: "React components, JSX, props, and state management."
   }
 ]
+
+const Price  = 1;
 
 export default function CourseInfo() {
   const [expandedSections, setExpandedSections] = useState<number[]>([])
@@ -192,7 +196,7 @@ export default function CourseInfo() {
                   allowFullScreen
                 ></iframe>
               </div>
-              <div className="text-4xl font-bold">₹3,099</div>
+              <div className="text-4xl font-bold"><RazorpayCheckout amount={Price} /></div>
               <Button className="w-full text-lg">Add to cart</Button>
               <p className="text-center text-sm text-gray-600">30-Day Money-Back Guarantee</p>
               <div className="space-y-4">
