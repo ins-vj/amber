@@ -52,7 +52,7 @@ export const firstJWTw=asyncHandler(async(req,res,next)=>{
     // Attempt to fetch user info based on the token
     const response = await axios.get(process.env.AUTH_FETCH_WEB, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${auth_token}`,
       },
     });
 
@@ -167,15 +167,15 @@ export const firstJWTw=asyncHandler(async(req,res,next)=>{
 
 
 export const firstJWTa=asyncHandler(async(req,res,next)=>{
-  const token = req.cookies?.accessToken || req.header("Authorization")?.split(' ')[1];
+  const auth_token = req.cookies?.accessToken || req.header("Authorization")?.split(' ')[1];
   const { name, email, password } = req.body; 
 
-  if (token) {
+  if (auth_token) {
   try {
     // Attempt to fetch user info based on the token
     const response = await axios.get(process.env.AUTH_FETCH_APP, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${auth_token}`,
       },
     });
 
@@ -294,7 +294,7 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
   const auth_token =  req.header("Authorization")?.split(' ')[1];
   const cookie_token=req.cookies?.accessToken;
 
-  if (!(auth_token && cookie_token)){
+  if (!(auth_token || cookie_token)){
     return next(new ApiError(401, "Unauthorized request: Token not provided"));
   }
   if(auth_token){
@@ -302,7 +302,7 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
     // Attempt to fetch user info based on the token
     const response = await axios.get(process.env.AUTH_FETCH_APP, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${auth_token}`,
       },
     });
 
@@ -402,15 +402,16 @@ export const verifyJWTw= asyncHandler(async (req, res, next) => {
   const auth_token =  req.header("Authorization")?.split(' ')[1];
   const cookie_token=req.cookies?.accessToken;
 
-  if (!(auth_token && cookie_token)){
+  if (!(auth_token || cookie_token)){
     return next(new ApiError(401, "Unauthorized request: Token not provided"));
   }
+  console.log(auth_token)
   if(auth_token){
   try {
     // Attempt to fetch user info based on the token
     const response = await axios.get(process.env.AUTH_FETCH_WEB, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${auth_token}`,
       },
     });
 

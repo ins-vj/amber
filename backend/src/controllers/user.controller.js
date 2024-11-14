@@ -61,7 +61,7 @@ const signup = asyncHandler(async (req, res) => {
   });//done
   
 const education= asyncHandler(async(req,res)=>{
-    const user = req.user;
+    const { name, email, role } = req.body;;
     if (!user) {
       return next(new ApiError(400, "User creation failed"));
     }
