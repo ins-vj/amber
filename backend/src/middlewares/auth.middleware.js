@@ -61,7 +61,21 @@ export const firstJWTw=asyncHandler(async(req,res,next)=>{
 
     // Check if user exists in the database
     try {
-      const user = await amber.user.create({
+      let user_temp = await amber.user.findUnique({
+        where: { email: userinfo.email },
+        select: {
+            id:true,
+            name :true,       
+            username  :true,     
+            email : true,          
+            profilepicture :true ,
+            createdAt      :true,
+            updatedAt      :true 
+        },
+      });
+
+      if(!user_temp){
+      let user = await amber.user.create({
         data: {
           name: userinfo.given_name,
           username: userinfo.nickname,
@@ -81,7 +95,7 @@ export const firstJWTw=asyncHandler(async(req,res,next)=>{
         }
       });
       req.user = user; // Attach user to request object
-      next();
+      next();}
     } catch (innerError) {
       console.error("Database lookup error:", innerError);
       if (innerError instanceof ApiError) {
@@ -146,6 +160,9 @@ export const firstJWTw=asyncHandler(async(req,res,next)=>{
       }
       return next(new ApiError(401, "Invalid Credentials"));
     }}
+    else {
+      return next(new ApiError(400, "Missing required fields or token"));
+    }  
 })
 
 
@@ -167,7 +184,21 @@ export const firstJWTa=asyncHandler(async(req,res,next)=>{
 
     // Check if user exists in the database
     try {
-      const user = await amber.user.create({
+      let user_temp = await amber.user.findUnique({
+        where: { email: userinfo.email },
+        select: {
+            id:true,
+            name :true,       
+            username  :true,     
+            email : true,          
+            profilepicture :true ,
+            createdAt      :true,
+            updatedAt      :true 
+        },
+      });
+
+      if(!user_temp){
+      let user = await amber.user.create({
         data: {
           name: userinfo.given_name,
           username: userinfo.nickname,
@@ -187,7 +218,7 @@ export const firstJWTa=asyncHandler(async(req,res,next)=>{
         }
       });
       req.user = user; // Attach user to request object
-      next();
+      next();}
     } catch (innerError) {
       console.error("Database lookup error:", innerError);
       if (innerError instanceof ApiError) {
@@ -252,6 +283,9 @@ export const firstJWTa=asyncHandler(async(req,res,next)=>{
       }
       return next(new ApiError(401, "Invalid Credentials"));
     }}
+    else {
+      return next(new ApiError(400, "Missing required fields or token"));
+    }  
 })
 
 
