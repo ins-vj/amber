@@ -10,7 +10,6 @@ import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 
 
 
-
 const testing=asyncHandler(async(req,res)=>{
     const user=req.user;
     return res.status(201).json(
@@ -18,14 +17,14 @@ const testing=asyncHandler(async(req,res)=>{
     )
 })//done
 
-const signup = async (req, res, next) => {
+const signup = asyncHandler(async (req, res) => {
     const user = req.user;
     const accessToken=req.accessToken;
     const refreshToken=req.refreshToken 
     if (!user) {
       return next(new ApiError(400, "User creation failed"));
     }
-  if(!accessToken){
+    if(!accessToken){
     try {
       return res.status(201).json( new ApiResponse(201,user,"User created successfully")
       );
@@ -59,9 +58,34 @@ const signup = async (req, res, next) => {
             return next(new ApiError(500, "An unexpected error occurred during signup"));
           }
     }
-  };//done
+  });//done
   
-
+const education= asyncHandler(async(req,res)=>{
+    const user = req.user;
+    if (!user) {
+      return next(new ApiError(400, "User creation failed"));
+    }
+    
+        try {
+            const options = {
+                httpOnly: true,
+                secure: true
+            }
+            
+            return res
+            .status(201)
+            .json( new ApiResponse(201,user,"User Eduction Saved Successfully")
+            );
+        
+          } catch (error) {
+            console.error("Error during updation:", error);
+            if (error instanceof ApiError) {
+              return next(error);
+            }
+            return next(new ApiError(500, "An unexpected error occurred during signup"));
+          }
+    
+})
 
 const getUserProfile = asyncHandler(async(req, res) => {
     const {username} = req.params
@@ -500,6 +524,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
 export {
     testing,
     signup,
+    education,
     registerUser,
     loginUser,
     logoutUser,

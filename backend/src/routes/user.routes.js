@@ -2,6 +2,7 @@ import { Router } from "express";
 import { 
     testing, 
     signup,
+    education,
     registerUser, 
     changeCurrentPassword, 
     getCurrentUser, 
@@ -21,6 +22,8 @@ router.route("/web/testing").post(verifyJWTw,testing)
 router.route("/app/testing").post(verifyJWTa,testing)
 router.route("/web/signup").post(firstJWTw,signup)
 router.route("/app/signup").post(firstJWTa,signup)
+router.route("/web/testing").put(verifyJWTw,education)
+router.route("/app/testing").put(verifyJWTa,education)
 router.route("/:username").get( getUserProfile)
 router.route("/register").post(
     upload.fields([

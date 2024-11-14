@@ -44,10 +44,10 @@ const generateAccessAndRefereshTokens = async(userId) =>{
 }
 
 export const firstJWTw=asyncHandler(async(req,res,next)=>{
-  const token = req.cookies?.accessToken || req.header("Authorization")?.split(' ')[1];
+  const auth_token = req.header("Authorization")?.split(' ')[1];
   const { name, email, password } = req.body; 
 
-  if (token) {
+  if (auth_token) {
   try {
     // Attempt to fetch user info based on the token
     const response = await axios.get(process.env.AUTH_FETCH_WEB, {
@@ -294,7 +294,7 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
   const auth_token =  req.header("Authorization")?.split(' ')[1];
   const cookie_token=req.cookies?.accessToken;
 
-  if (!token) {
+  if (!(auth_token && cookie_token)){
     return next(new ApiError(401, "Unauthorized request: Token not provided"));
   }
   if(auth_token){
@@ -312,12 +312,15 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
     // Check if user exists in the database
     try {
       const user = await amber.user.findUnique({
-        where: { username: "param" },
+        where: { username: userinfo.email },
         select: {
-          id: true,
-          name: true,
-          email: true,
-          username: true,
+          id:true,
+          name :true,       
+          username  :true,     
+          email : true,          
+          profilepicture :true ,
+          createdAt      :true,
+          updatedAt      :true 
         },
       });
 
@@ -347,24 +350,25 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
   else if(cookie_token){
     try {
       // Attempt to fetch user info based on the token
-      const response = await axios.get(process.env.AUTH_FETCH_APP, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      const userinfo = response.data;
-      console.log("User info from auth service:", userinfo);
+      const decodedToken = jwt.verify(cookie_token, process.env.ACCESS_TOKEN_SECRET)
+    
+    
+        if (!decodedToken) {
+            throw new ApiError(401, "UnAuthorised Access")
+        }
   
       // Check if user exists in the database
       try {
         const user = await amber.user.findUnique({
-          where: { username: "param" },
+          where: { username: userinfo.email },
           select: {
-            id: true,
-            name: true,
-            email: true,
-            username: true,
+            id:true,
+            name :true,       
+            username  :true,     
+            email : true,          
+            profilepicture :true ,
+            createdAt      :true,
+            updatedAt      :true 
           },
         });
   
@@ -392,16 +396,16 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
       return next(new ApiError(401, "Invalid access token"));
     }
   }
-
 });
 
-export const verifyJWTw = asyncHandler(async (req, res, next) => {
-  const token = req.cookies?.accessToken || req.header("Authorization")?.split(' ')[1];
+export const verifyJWTw= asyncHandler(async (req, res, next) => {
+  const auth_token =  req.header("Authorization")?.split(' ')[1];
+  const cookie_token=req.cookies?.accessToken;
 
-  if (!token) {
+  if (!(auth_token && cookie_token)){
     return next(new ApiError(401, "Unauthorized request: Token not provided"));
   }
-
+  if(auth_token){
   try {
     // Attempt to fetch user info based on the token
     const response = await axios.get(process.env.AUTH_FETCH_WEB, {
@@ -416,12 +420,15 @@ export const verifyJWTw = asyncHandler(async (req, res, next) => {
     // Check if user exists in the database
     try {
       const user = await amber.user.findUnique({
-        where: { username: "param" },
+        where: { username: userinfo.email },
         select: {
-          id: true,
-          name: true,
-          email: true,
-          username: true,
+          id:true,
+          name :true,       
+          username  :true,     
+          email : true,          
+          profilepicture :true ,
+          createdAt      :true,
+          updatedAt      :true 
         },
       });
 
@@ -447,5 +454,54 @@ export const verifyJWTw = asyncHandler(async (req, res, next) => {
       return next(outerError); // Pass along any custom error
     }
     return next(new ApiError(401, "Invalid access token"));
+  }}
+  else if(cookie_token){
+    try {
+      // Attempt to fetch user info based on the token
+      const decodedToken = jwt.verify(cookie_token, process.env.ACCESS_TOKEN_SECRET)
+    
+    
+        if (!decodedToken) {
+            throw new ApiError(401, "UnAuthorised Access")
+        }
+  
+      // Check if user exists in the database
+      try {
+        const user = await amber.user.findUnique({
+          where: { username: userinfo.email },
+          select: {
+            id:true,
+            name :true,       
+            username  :true,     
+            email : true,          
+            profilepicture :true ,
+            createdAt      :true,
+            updatedAt      :true 
+          },
+        });
+  
+        if (!user) {
+          console.log("User not found in database");
+          // Throw custom error if user is not found
+          throw new ApiError(401, "User doesn't exist");
+        }
+  
+        console.log("User found in database:", user);
+        req.user = user; // Attach user to request object
+        next();
+      } catch (innerError) {
+        console.error("Database lookup error:", innerError);
+        if (innerError instanceof ApiError) {
+          return next(innerError); // Pass along the custom error without rethrowing
+        }
+        return next(new ApiError(500, "An error occurred while fetching the user"));
+      }
+    } catch (outerError) {
+      console.error("Token validation or outer error:", outerError);
+      if (outerError instanceof ApiError) {
+        return next(outerError); // Pass along any custom error
+      }
+      return next(new ApiError(401, "Invalid access token"));
+    }
   }
 });
