@@ -56,9 +56,11 @@ const onSubmit = async (e: React.FormEvent) => {
         <div className='flex flex-col items-center w-2/3 z-10'>
           LOG IN <br/>
 <form action="submit" className='flex flex-col'>
+  <p className='mt-3'>e-mail:</p>
   <input type="text" placeholder="email" name="email" id="email" />
+  <p className='mt-5'>password:</p>
   <input type="password" placeholder="password" name="password" id="password" />
-  <input type="submit" value="Login" className='btn btn-primary mb-10' />
+  <input type="submit" value="Login" className='btn btn-primary mb-10 mt-3' />
 </form>
 
         <a href="/api/auth/login" className="btn btn-primary btn-margin">

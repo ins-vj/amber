@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+
+
 body {
   font-family: Arial, Helvetica, sans-serif;
   --sidebar-width: 0;
@@ -11,6 +14,15 @@ body {
 body.with-sidebar {
   --sidebar-width: 16rem; /* Sidebar width */
 }
+
+.font-oswald-bold {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 900; /* Adjust weight as needed */
+  font-size: 4rem; /* Increase size as needed */
+  text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5); /* Adjust the color and blur as needed */
+
+}
+
 
 .main-content {
   width: 100%;
