@@ -95,7 +95,7 @@ model Course {
   id              Int             @id @default(autoincrement())
   insId           Int
   ins             Instructor      @relation(fields: [insId] , references: [id])
-  title           String
+  title           String          @unique
   imageUrl        String
   description     String
   prerequisites   String
@@ -222,9 +222,9 @@ model admin{
 
 model User{
   id              Int             @id @default(autoincrement())
-  name            String 
+  name            String?
   username        String          @unique
-  password        String 
+  password        String?
   email           String          @unique
   purchases       UserPurchases[]
   videoProgress   VideoProgress[]
@@ -236,7 +236,7 @@ model User{
   refresh_token   String?
   profilepicture  String?
  // linkdinprofile  String?
-  educationLevel  EducationLevel
+  educationLevel  EducationLevel?
   schoolingYear   SchoolingYear?
   schoolStream    SchoolStream?
   degree          Degree?

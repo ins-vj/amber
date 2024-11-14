@@ -1,10 +1,8 @@
 import { Router } from "express";
 import { 
-    testing,
-    loginUser, 
-    logoutUser, 
+    testing, 
+    signup,
     registerUser, 
-    refreshAccessToken, 
     changeCurrentPassword, 
     getCurrentUser, 
     updateUserAvatar, 
@@ -14,12 +12,15 @@ import {
     updateAccountDetails
 } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWTw,verifyJWTa,firstJWTw,firstJWTa} from "../middlewares/auth.middleware.js";
 
 
 const router = Router()
 
-router.route("/testing").post(verifyJWT,testing)
+router.route("/web/testing").post(verifyJWTw,testing)
+router.route("/app/testing").post(verifyJWTa,testing)
+router.route("/web/signup").post(firstJWTw,signup)
+router.route("/app/signup").post(firstJWTa,signup)
 router.route("/:username").get( getUserProfile)
 router.route("/register").post(
     upload.fields([
@@ -34,10 +35,8 @@ router.route("/register").post(
     ]),
     registerUser
     )
-router.route("/login").post(loginUser)
-router.route("/logout").post( logoutUser)
 
-router.route("/refresh-token").post(refreshAccessToken)
+
 router.route("/change-password").post( changeCurrentPassword)
 router.route("/current-user").get( getCurrentUser)
 router.route("/update-account").patch(updateAccountDetails)

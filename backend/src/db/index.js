@@ -7,6 +7,7 @@ import { withOptimize } from "@prisma/extension-optimize";
 const createPrismaClient = () => {
   const client = new PrismaClient();
   client.$extends(withOptimize({ apiKey: process.env.OPTIMIZE_API_KEY })).$extends(withAccelerate());
+  console.log("Prisma Optimize and Accelerate extensions activated:", client._extensions);
   return client;
 };
 

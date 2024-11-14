@@ -9,34 +9,59 @@ import {amber} from "../db/index.js";
 import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 
 
+
+
 const testing=asyncHandler(async(req,res)=>{
     const user=req.user;
     return res.status(201).json(
         new ApiResponse(200,user, "User Registered Successfully")
     )
-})
-const generateAccessAndRefereshTokens = async(userId) =>{
-    try {
-        const user = await amber.user.findUnique({
-            where: {
-              id: userId,
-            },
-          });
-          
-        const accessToken = generateAccessToken(user)
-        const refreshToken = generateRefreshToken(user)
+})//done
 
-        await prisma.user.update({
-            where: { id: userId },
-            data: { refresh_token: refreshToken }
-          });
-
-        return {accessToken, refreshToken}
-
-    } catch (error) {
-        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+const signup = async (req, res, next) => {
+    const user = req.user;
+    const accessToken=req.accessToken;
+    const refreshToken=req.refreshToken 
+    if (!user) {
+      return next(new ApiError(400, "User creation failed"));
     }
-}
+  if(!accessToken){
+    try {
+      return res.status(201).json( new ApiResponse(201,user,"User created successfully")
+      );
+  
+    } catch (error) {
+      console.error("Error during signup process:", error);
+      if (error instanceof ApiError) {
+        return next(error);
+      }
+      return next(new ApiError(500, "An unexpected error occurred during signup"));
+    }}
+    else if(accessToken){
+        try {
+            const options = {
+                httpOnly: true,
+                secure: true
+            }
+            
+            return res
+            .status(201)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json( new ApiResponse(201,user,"User created successfully")
+            );
+        
+          } catch (error) {
+            console.error("Error during signup process:", error);
+            if (error instanceof ApiError) {
+              return next(error);
+            }
+            return next(new ApiError(500, "An unexpected error occurred during signup"));
+          }
+    }
+  };//done
+  
+
 
 const getUserProfile = asyncHandler(async(req, res) => {
     const {username} = req.params
@@ -474,6 +499,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
 
 export {
     testing,
+    signup,
     registerUser,
     loginUser,
     logoutUser,

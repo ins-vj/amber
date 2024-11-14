@@ -16,8 +16,10 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 import userRouter from './routes/user.routes.js'
+import courseRouter from './routes/course.routes.js'
 
 app.use("/api/v1/user", userRouter)
+app.use("/api/v1/course",courseRouter)
 
 app.use((err, req, res, next) => {
   // Check if the error is an instance of ApiError
