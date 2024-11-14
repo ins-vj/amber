@@ -19,29 +19,36 @@ import { generateAccessToken,generateRefreshToken } from "../utils/token.js";
 //   tokenSigningAlg: 'RS256'
 // });
 
-const generateAccessAndRefereshTokens = async(userId) =>{
+export const generateAccessAndRefreshTokens = async (userId) => {
   try {
-      const user = await amber.user.findUnique({
-          where: {
-              id: userId,
-            }, 
-      })
-      const accessToken = generateAccessToken(user)
-      const refreshToken = generateRefreshToken(user)
+    console.log("Fetching user with ID:", userId);
+    const user = await amber.user.findUnique({
+      where: { id: userId },
+    });
 
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { refreshToken: refreshToken },
-      });
+    if (!user) {
+      console.error("User not found");
+      throw new ApiError(404, "User not found");
+    }
 
-      console.log("updated referesh token : " , updatedUser )
+    console.log("Generating access and refresh tokens for user:", user);
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
-      return {accessToken, refreshToken}
+    console.log("Updating user with refresh token in database");
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { refresh_token:refreshToken },
+    });
+
+    console.log("Updated refresh token for user:", updatedUser);
+    return { accessToken, refreshToken };
 
   } catch (error) {
-      throw new ApiError(500, "Something went wrong while generating referesh and access token")
+    console.error("Error in generateAccessAndRefreshTokens:", error);
+    throw new ApiError(500, "Something went wrong while generating refresh and access token");
   }
-}
+};
 
 export const firstJWTw=asyncHandler(async(req,res,next)=>{
   const auth_token = req.header("Authorization")?.split(' ')[1];
@@ -140,7 +147,7 @@ export const firstJWTw=asyncHandler(async(req,res,next)=>{
           }
         });
 
-        const{accessToken,refreshToken}= await generateAccessAndRefereshTokens(user.id)
+        const{accessToken,refreshToken}= await generateAccessAndRefreshTokens(user.id)
 
         req.user = user; // Attach user to request object
         req.accessToken=accessToken;
@@ -167,7 +174,7 @@ export const firstJWTw=asyncHandler(async(req,res,next)=>{
 
 
 export const firstJWTa=asyncHandler(async(req,res,next)=>{
-  const auth_token = req.cookies?.accessToken || req.header("Authorization")?.split(' ')[1];
+  const auth_token = req.header("Authorization")?.split(' ')[1];
   const { name, email, password } = req.body; 
 
   if (auth_token) {
@@ -263,7 +270,7 @@ export const firstJWTa=asyncHandler(async(req,res,next)=>{
           }
         });
 
-        const{accessToken,refreshToken}= await generateAccessAndRefereshTokens(user.id)
+        const{accessToken,refreshToken}= await generateAccessAndRefreshTokens(user.id)
 
         req.user = user; // Attach user to request object
         req.accessToken=accessToken;
