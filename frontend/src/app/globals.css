@@ -4,6 +4,22 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  --sidebar-width: 0;
+}
+
+/* Styles when sidebar is present */
+body.with-sidebar {
+  --sidebar-width: 16rem; /* Sidebar width */
+}
+
+.main-content {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Example of overriding layout-related styles when sidebar is not present */
+body.without-sidebar .main-content {
+  width: 100%; /* Adjust width as needed */
 }
 
 @layer base {

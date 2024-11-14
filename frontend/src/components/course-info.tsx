@@ -58,9 +58,8 @@ const courseSections = [
   }
 ]
 
-const Price  = 1;
 
-export default function CourseInfo() {
+export default function CourseInfo(data:any) {
   const [expandedSections, setExpandedSections] = useState<number[]>([])
   const [showAllSections, setShowAllSections] = useState(false)
   const [isSticky, setIsSticky] = useState(true)
@@ -96,15 +95,15 @@ export default function CourseInfo() {
       {/* Course Banner */}
       <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
         <Image
-          src="/images/8469936.jpg"
+          src= {data.imageUrl}
           alt="Course Banner"
           layout="fill"
           objectFit="cover"
         />
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end p-6">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">The Complete 2024 Web Development Bootcamp</h1>
-            <p className="text-xl text-gray-200">Become a Full-Stack Web Developer with just ONE course. HTML, CSS, Javascript, Node, React, PostgreSQL, Web3 and DApps</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{data.title}</h1>
+            <p className="text-xl text-gray-200">{data.description}</p>
           </div>
         </div>
       </div>
@@ -170,13 +169,13 @@ export default function CourseInfo() {
           {/* Requirements */}
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Requirements</h2>
+              <h2 className="text-2xl font-bold mb-4">Prerequisities</h2>
               <ul className="list-disc pl-5 space-y-2">
-                <li>No programming experience needed - I'll teach you everything you need to know</li>
-                <li>A computer with access to the internet</li>
-                <li>No paid software required</li>
-                <li>I'll walk you through, step-by-step how to get all the software installed and set up</li>
-              </ul>
+              
+  {data?.prerequisites?.map((item: string) => (
+    <li key={item}>{item}</li>
+  )) || <li>No prerequisites available</li>}
+          </ul>
             </CardContent>
           </Card>
         </div>
@@ -189,14 +188,14 @@ export default function CourseInfo() {
                 <iframe
                   width="560"
                   height="315"
-                  src="https://www.youtube.com/embed/-vI_WMUBXcA?list=RDG_LSoVwzmI4"
+                  src={data.introvideo}
                   title="Promotional Video"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 ></iframe>
               </div>
-              <div className="text-4xl font-bold"><RazorpayCheckout amount={Price} /></div>
+              <div className="text-4xl font-bold"><RazorpayCheckout amount={199} /></div>
               <Button className="w-full text-lg">Add to cart</Button>
               <p className="text-center text-sm text-gray-600">30-Day Money-Back Guarantee</p>
               <div className="space-y-4">
