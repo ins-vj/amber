@@ -17,48 +17,47 @@ const testing=asyncHandler(async(req,res)=>{
     )
 })//done
 
-const signup = asyncHandler(async (req, res) => {
-    const user = req.user;
-    const accessToken=req.accessToken;
-    const refreshToken=req.refreshToken 
+const signup = asyncHandler(async (req, res, next) => {
+    const { user, accessToken, refreshToken, isExistingUser } = req;
+  
     if (!user) {
       return next(new ApiError(400, "User creation failed"));
     }
-    if(!accessToken){
-    try {
-      return res.status(201).json( new ApiResponse(201,user,"User created successfully")
-      );
   
-    } catch (error) {
-      console.error("Error during signup process:", error);
-      if (error instanceof ApiError) {
-        return next(error);
+    try {
+      // Only set cookies for manual signup (where tokens are generated)
+      if (accessToken && refreshToken) {
+        const options = {
+          httpOnly: true,
+          secure: true,
+
+        };
+  
+        return res
+          .status(isExistingUser ? 200 : 201)
+          .cookie("accessToken", accessToken, options)
+          .cookie("refreshToken", refreshToken, options)
+          .json(new ApiResponse(
+            isExistingUser ? 200 : 201,
+            user,
+            isExistingUser ? "User logged in successfully" : "User created successfully"
+          ));
       }
+  
+      // For Google OAuth (no tokens needed as auth is handled by Google)
+      return res
+        .status(isExistingUser ? 200 : 201)
+        .json(new ApiResponse(
+          isExistingUser ? 200 : 201,
+          user,
+          isExistingUser ? "User logged in successfully" : "User created successfully"
+        ));
+    } catch (error) {
+      console.error("Signup response error:", error);
       return next(new ApiError(500, "An unexpected error occurred during signup"));
-    }}
-    else if(accessToken){
-        try {
-            const options = {
-                httpOnly: true,
-                secure: true
-            }
-            
-            return res
-            .status(201)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json( new ApiResponse(201,user,"User created successfully")
-            );
-        
-          } catch (error) {
-            console.error("Error during signup process:", error);
-            if (error instanceof ApiError) {
-              return next(error);
-            }
-            return next(new ApiError(500, "An unexpected error occurred during signup"));
-          }
     }
-  });//done
+  });
+  //done
   
 const education= asyncHandler(async(req,res)=>{
     const { name, email, role } = req.body;;

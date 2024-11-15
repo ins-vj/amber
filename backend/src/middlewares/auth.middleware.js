@@ -5,6 +5,7 @@ import jwks from "jwks-rsa"
 import axios from "axios"
 import { amber } from "../db/index.js";
 import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 import { generateAccessToken,generateRefreshToken } from "../utils/token.js";
 
 // export const jwtCheck = auth({
@@ -19,29 +20,27 @@ import { generateAccessToken,generateRefreshToken } from "../utils/token.js";
 //   tokenSigningAlg: 'RS256'
 // });
 
-export const generateAccessAndRefreshTokens = async (userId) => {
+const verifyToken = async (token, type = 'access') => {
   try {
-    console.log("Fetching user with ID:", userId);
-    const user = await amber.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      console.error("User not found");
-      throw new ApiError(404, "User not found");
+    const decoded = jwt.verify(
+      token, 
+      type === 'access' ? process.env.ACCESS_TOKEN_SECRET : process.env.REFRESH_TOKEN_SECRET
+    );
+    return { valid: true, decoded };
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return { valid: false, expired: true };
     }
+    return { valid: false, expired: false };
+  }
+};
 
+export const generateAccessAndRefreshTokens = async (user) => {
+  try {
     console.log("Generating access and refresh tokens for user:", user);
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    console.log("Updating user with refresh token in database");
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { refresh_token:refreshToken },
-    });
-
-    console.log("Updated refresh token for user:", updatedUser);
     return { accessToken, refreshToken };
 
   } catch (error) {
@@ -50,250 +49,377 @@ export const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
-export const firstJWTw=asyncHandler(async(req,res,next)=>{
-  const auth_token = req.header("Authorization")?.split(' ')[1];
-  const { name, email, password } = req.body; 
+export const firstJWTw = asyncHandler(async (req, res, next) => {
+  // Check which authentication method is being used
+  const isGoogleAuth = req.header("Authorization")?.split(' ')[1];
+  const { name, email, password } = req.body;
 
-  if (auth_token) {
+  // Check for existing tokens in cookies
+  const existingAccessToken = req.cookies?.accessToken;
+  const existingRefreshToken = req.cookies?.refreshToken;
+
+  // Validate request based on auth method
+  if (isGoogleAuth) {
+    return handleGoogleAuth_web(req, res, next);
+  } else if (name && email && password) {
+    return handleManualSignup(req, res, next,{existingAccessToken,existingRefreshToken});
+  } else {
+    return next(new ApiError(400, "Invalid request. Please provide either Google auth token or name, email, and password"));
+  }
+});
+
+const handleGoogleAuth_web = async (req, res, next) => {
+  const auth_token = req.header("Authorization")?.split(' ')[1];
+
   try {
-    // Attempt to fetch user info based on the token
+    // Fetch user info from Google
     const response = await axios.get(process.env.AUTH_FETCH_WEB, {
       headers: {
         Authorization: `Bearer ${auth_token}`,
       },
     });
 
-    const userinfo = response.data;
-    console.log("User info from auth service:", userinfo);
-
-    // Check if user exists in the database
-    try {
-      let user_temp = await amber.user.findUnique({
-        where: { email: userinfo.email },
-        select: {
-            id:true,
-            name :true,       
-            username  :true,     
-            email : true,          
-            profilepicture :true ,
-            createdAt      :true,
-            updatedAt      :true 
-        },
-      });
-
-      if(!user_temp){
-      let user = await amber.user.create({
-        data: {
-          name: userinfo.given_name,
-          username: userinfo.nickname,
-          email: userinfo.email,
-          profilepicture: userinfo.picture,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        select:{
-          id:true,
-          name :true,       
-          username  :true,     
-          email : true,          
-          profilepicture :true ,
-          createdAt      :true,
-          updatedAt      :true 
-        }
-      });
-      req.user = user; // Attach user to request object
-      next();}
-    } catch (innerError) {
-      console.error("Database lookup error:", innerError);
-      if (innerError instanceof ApiError) {
-        return next(innerError); // Pass along the custom error without rethrowing
-      }
-      return next(new ApiError(500, "An error occurred while creating the user"));
-    }}
-   catch (outerError) {
-    console.error("Token validation or outer error:", outerError);
-    if (outerError instanceof ApiError) {
-      return next(outerError); // Pass along any custom error
+    if (!response.data?.email) {
+      return next(new ApiError(400, "Invalid user data received from Google"));
     }
-    return next(new ApiError(401, "Invalid access token"));
-  }}
-  else if (name && email && password) {
-    try {
-      const userExists = await amber.user.findUnique({ where: { email } });
-      
-      if (userExists) {
-        return next(new ApiError(409, "User with this email already exists"));
+
+    const userinfo = response.data;
+    console.log("Google user info:", userinfo);
+
+    // Check if user exists
+    const existingUser = await amber.user.findUnique({
+      where: { email: userinfo.email },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        profilepicture: true,
+        createdAt: true,
+        updatedAt: true
+      },
+    });
+
+    if (existingUser) {
+      req.user = existingUser;
+      req.isExistingUser = true;
+      return next();
+    }
+
+    // Create new user from Google data
+    const newUser = await amber.user.create({
+      data: {
+        name: userinfo.given_name || userinfo.name || '',
+        username: userinfo.nickname || userinfo.email.split('@')[0],
+        email: userinfo.email,
+        profilepicture: userinfo.picture || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        profilepicture: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    req.user = newUser;
+    return next();
+
+  } catch (error) {
+    console.error("Google auth error:", error);
+    return next(new ApiError(
+      error.response?.status || 500,
+      error.response?.data?.message || "Google authentication failed"
+    ));
+  }
+};
+
+const handleManualSignup = async (req, res, next, { existingAccessToken, existingRefreshToken }) => {
+  const { name, email, password } = req.body;
+  console.log(existingAccessToken)
+  try {
+    const existingUser = await amber.user.findUnique({ 
+      where: { email }, 
+    });
+    console.log(existingUser)
+    if (existingUser) {
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+      if (!isPasswordValid) {
+        return next(new ApiError(401, "Invalid credentials"));
       }
 
-      const hashedPassword = await bcrypt.hash(password, 5);
+      // Check existing tokens if present
+      let shouldGenerateNewTokens = true;
 
-      try { 
-        const user = await amber.user.create({
+      if (existingAccessToken && existingRefreshToken) {
+        // First verify if the refresh token matches the one in database
+        if (existingUser.refreshToken === existingRefreshToken) {
+          // Verify access token
+          const accessTokenStatus = await verifyToken(existingAccessToken, 'access');
+          console.log(accessTokenStatus.valid)
+          
+          if (accessTokenStatus.valid) {
+            // Access token is still valid
+            shouldGenerateNewTokens = false;
+            req.user = {
+              id: existingUser.id,
+              name: existingUser.name,
+              username: existingUser.username,
+              email: existingUser.email,
+              profilepicture: existingUser.profilepicture,
+              createdAt: existingUser.createdAt,
+              updatedAt: existingUser.updatedAt
+            };
+            req.accessToken = existingAccessToken;
+            req.refreshToken = existingRefreshToken;
+            req.isExistingUser = true;
+          } else if (accessTokenStatus.expired) {
+            // Try to use refresh token
+            const refreshTokenStatus = await verifyToken(existingRefreshToken, 'refresh');
+            console.log(refreshTokenStatus.expired)
+            
+            if (refreshTokenStatus.valid) {
+              // Generate new access token only
+              const newAccessToken = await generateAccessToken(existingUser);
+              req.user = {
+                id: existingUser.id,
+                name: existingUser.name,
+                username: existingUser.username,
+                email: existingUser.email,
+                profilepicture: existingUser.profilepicture,
+                createdAt: existingUser.createdAt,
+                updatedAt: existingUser.updatedAt
+              };
+              req.accessToken = newAccessToken;
+              req.refreshToken = existingRefreshToken; // Keep existing refresh token
+              req.isExistingUser = true;
+              shouldGenerateNewTokens = false;
+            }
+          }
+        }
+      }
+
+      if (shouldGenerateNewTokens) {
+        // Generate new tokens and update in database
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(existingUser);
+        console.log(accessToken,refreshToken)
+        
+        // Update the refresh token in database
+        await amber.user.update({
+          where: { id: existingUser.id },
           data: {
-            username: name,
-            email: email,
-            password:hashedPassword,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          select:{
-            id:true,
-            name :true,       
-            username  :true,     
-            email : true,          
-            profilepicture :true ,
-            createdAt      :true,
-            updatedAt      :true 
+            refresh_token: refreshToken,
+            updatedAt: new Date()
           }
         });
 
-        const{accessToken,refreshToken}= await generateAccessAndRefreshTokens(user.id)
-
-        req.user = user; // Attach user to request object
-        req.accessToken=accessToken;
-        req.refreshToken=refreshToken;
-        next();
-      } catch (innerError) {
-        console.error("Database lookup error:", innerError);
-        if (innerError instanceof ApiError) {
-          return next(innerError); // Pass along the custom error without rethrowing
-        }
-        return next(new ApiError(500, "An error occurred while creating the user"));
-      }}
-     catch (outerError) {
-      console.error("Token validation or outer error:", outerError);
-      if (outerError instanceof ApiError) {
-        return next(outerError); // Pass along any custom error
+        req.user = {
+          id: existingUser.id,
+          name: existingUser.name,
+          username: existingUser.username,
+          email: existingUser.email,
+          profilepicture: existingUser.profilepicture,
+          createdAt: existingUser.createdAt,
+          updatedAt: existingUser.updatedAt
+        };
+        req.accessToken = accessToken;
+        req.refreshToken = refreshToken;
+        req.isExistingUser = true;
       }
-      return next(new ApiError(401, "Invalid Credentials"));
-    }}
-    else {
-      return next(new ApiError(400, "Missing required fields or token"));
-    }  
-})
+
+      return next();
+    }
+
+    const result = await amber.$transaction(async (amber) => {
+      let user;
+      let tokens;
+    
+      try {
+        // 1. Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+    
+        // 2. Try generating tokens first with temporary data
+        // This ensures token generation works before creating user
+        tokens = await generateAccessAndRefreshTokens({
+          email,
+          password: hashedPassword
+        });
+        console.log("tmeporary tokens" , tokens)
+        // 3. Only create user if tokens were generated successfully
+        user = await amber.user.create({
+          data: {
+            username: name,
+            email,
+            password: hashedPassword,
+            refresh_token: tokens.refreshToken, // Store the refresh token
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            profilepicture: true,
+            refresh_token: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        });
+    
+        // 4. Generate final tokens with actual user ID
+        tokens = await generateAccessAndRefreshTokens(user);
+        console.log("final token" , tokens)
+        // 5. Update user with final refresh token
+        user = await amber.user.update({
+          where: { id: user.id },
+          data: {
+            refresh_token: tokens.refreshToken,
+            updatedAt: new Date()
+          },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            profilepicture: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        });
+        console.log(user)
+        return { user, tokens };
+      } catch (error) {
+        // If any step fails, the entire transaction will be rolled back
+        // This ensures no user is created without valid tokens
+        throw new ApiError(
+          500,
+          error.message === "Error generating tokens" 
+            ? "Failed to generate authentication tokens" 
+            : "User creation failed"
+        );
+      }
+    });
+    console.log(result.user,result.tokens)
+    // Only set these if we get here (no errors occurred)
+    req.user = {
+      id: result.user.id,
+      name: result.user.name,
+      username: result.user.username,
+      email: result.user.email,
+      profilepicture: result.user.profilepicture,
+      createdAt: result.user.createdAt,
+      updatedAt: result.user.updatedAt
+    };
+    req.accessToken = result.tokens.accessToken;
+    req.refreshToken = result.tokens.refreshToken;
+    
+    return next();
+  } catch (error) {
+    console.error("Manual signup error:", error);
+    return next(new ApiError(
+      500, 
+      error.code === 'P2002' ? "Email already exists" : "User creation failed"
+    ));
+  }
+};
 
 
-export const firstJWTa=asyncHandler(async(req,res,next)=>{
+export const firstJWTa = asyncHandler(async (req, res, next) => {
+  // Check which authentication method is being used
+  const isGoogleAuth = req.header("Authorization")?.split(' ')[1];
+  const { name, email, password } = req.body;
+
+  // Check for existing tokens in cookies
+  const existingAccessToken = req.cookies?.accessToken;
+  const existingRefreshToken = req.cookies?.refreshToken;
+
+  // Validate request based on auth method
+  if (isGoogleAuth) {
+    return handleGoogleAuth_app(req, res, next);
+  } else if (name && email && password) {
+    return handleManualSignup(req, res, next,{existingAccessToken,existingRefreshToken});
+  } else {
+    return next(new ApiError(400, "Invalid request. Please provide either Google auth token or name, email, and password"));
+  }
+});
+
+const handleGoogleAuth_app = async (req, res, next) => {
   const auth_token = req.header("Authorization")?.split(' ')[1];
-  const { name, email, password } = req.body; 
 
-  if (auth_token) {
   try {
-    // Attempt to fetch user info based on the token
+    // Fetch user info from Google
     const response = await axios.get(process.env.AUTH_FETCH_APP, {
       headers: {
         Authorization: `Bearer ${auth_token}`,
       },
     });
 
-    const userinfo = response.data;
-    console.log("User info from auth service:", userinfo);
-
-    // Check if user exists in the database
-    try {
-      let user_temp = await amber.user.findUnique({
-        where: { email: userinfo.email },
-        select: {
-            id:true,
-            name :true,       
-            username  :true,     
-            email : true,          
-            profilepicture :true ,
-            createdAt      :true,
-            updatedAt      :true 
-        },
-      });
-
-      if(!user_temp){
-      let user = await amber.user.create({
-        data: {
-          name: userinfo.given_name,
-          username: userinfo.nickname,
-          email: userinfo.email,
-          profilepicture: userinfo.picture,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        select:{
-          id:true,
-          name :true,       
-          username  :true,     
-          email : true,          
-          profilepicture :true ,
-          createdAt      :true,
-          updatedAt      :true 
-        }
-      });
-      req.user = user; // Attach user to request object
-      next();}
-    } catch (innerError) {
-      console.error("Database lookup error:", innerError);
-      if (innerError instanceof ApiError) {
-        return next(innerError); // Pass along the custom error without rethrowing
-      }
-      return next(new ApiError(500, "An error occurred while creating the user"));
-    }}
-   catch (outerError) {
-    console.error("Token validation or outer error:", outerError);
-    if (outerError instanceof ApiError) {
-      return next(outerError); // Pass along any custom error
+    if (!response.data?.email) {
+      return next(new ApiError(400, "Invalid user data received from Google"));
     }
-    return next(new ApiError(401, "Invalid access token"));
-  }}
-  else if (name && email && password) {
-    try {
-      const userExists = await amber.user.findUnique({ where: { email } });
-      
-      if (userExists) {
-        return next(new ApiError(409, "User with this email already exists"));
+
+    const userinfo = response.data;
+    console.log("Google user info:", userinfo);
+
+    // Check if user exists
+    const existingUser = await amber.user.findUnique({
+      where: { email: userinfo.email },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        profilepicture: true,
+        createdAt: true,
+        updatedAt: true
+      },
+    });
+
+    if (existingUser) {
+      req.user = existingUser;
+      req.isExistingUser = true;
+      return next();
+    }
+
+    // Create new user from Google data
+    const newUser = await amber.user.create({
+      data: {
+        name: userinfo.given_name || userinfo.name || '',
+        username: userinfo.nickname || userinfo.email.split('@')[0],
+        email: userinfo.email,
+        profilepicture: userinfo.picture || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        profilepicture: true,
+        createdAt: true,
+        updatedAt: true
       }
+    });
 
-      const hashedPassword = await bcrypt.hash(password, 5);
+    req.user = newUser;
+    return next();
 
-      try { 
-        const user = await amber.user.create({
-          data: {
-            username: name,
-            email: email,
-            password:hashedPassword,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          select:{
-            id:true,
-            name :true,       
-            username  :true,     
-            email : true,          
-            profilepicture :true ,
-            createdAt      :true,
-            updatedAt      :true 
-          }
-        });
-
-        const{accessToken,refreshToken}= await generateAccessAndRefreshTokens(user.id)
-
-        req.user = user; // Attach user to request object
-        req.accessToken=accessToken;
-        req.refreshToken=refreshToken;
-        next();
-      } catch (innerError) {
-        console.error("Database lookup error:", innerError);
-        if (innerError instanceof ApiError) {
-          return next(innerError); // Pass along the custom error without rethrowing
-        }
-        return next(new ApiError(500, "An error occurred while creating the user"));
-      }}
-     catch (outerError) {
-      console.error("Token validation or outer error:", outerError);
-      if (outerError instanceof ApiError) {
-        return next(outerError); // Pass along any custom error
-      }
-      return next(new ApiError(401, "Invalid Credentials"));
-    }}
-    else {
-      return next(new ApiError(400, "Missing required fields or token"));
-    }  
-})
+  } catch (error) {
+    console.error("Google auth error:", error);
+    return next(new ApiError(
+      error.response?.status || 500,
+      error.response?.data?.message || "Google authentication failed"
+    ));
+  }
+};
 
 
 

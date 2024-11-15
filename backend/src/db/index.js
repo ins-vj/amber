@@ -6,9 +6,14 @@ import { withOptimize } from "@prisma/extension-optimize";
 
 const createPrismaClient = () => {
   const client = new PrismaClient();
-  client.$extends(withOptimize({ apiKey: process.env.OPTIMIZE_API_KEY })).$extends(withAccelerate());
-  console.log("Prisma Optimize and Accelerate extensions activated:", client._extensions);
-  return client;
+  const clientWithExtensions=client.$extends(withOptimize({ apiKey: process.env.OPTIMIZE_API_KEY })).$extends(withAccelerate());
+  const extensions = clientWithExtensions.$options?.extensions;
+  console.log("Prisma client extensions status:", {
+    hasExtensions: Boolean(extensions),
+    extensionsConfig: extensions,
+    optimizeApiKey: process.env.OPTIMIZE_API_KEY ? 'Present' : 'Missing'
+  });
+  return clientWithExtensions;
 };
 
 // Ensure only one Prisma client instance is used in development mode
@@ -25,6 +30,15 @@ const connectDB = async () => {
   try {
     await amber.$connect();
     console.log(`\n PostgreSQL connected successfully!`);
+    console.log('Connected client configuration:', {
+      hasExtensions: Boolean(amber.$options?.extensions),
+      extensionDetails: amber.$options?.extensions,
+      databaseUrl: Boolean(process.env.DATABASE_URL),
+    });
+    
+    // Test query to verify optimize is working
+    const testQuery = await amber.$queryRaw`SELECT 1 as test`;
+    console.log('Test query successful:', testQuery);
   } catch (error) {
     console.error('PostgreSQL connection FAILED', error);
     process.exit(1);
