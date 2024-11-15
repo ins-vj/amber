@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { fetchAccessToken } from "@/helpers/api";
+import { CardSpotlight } from "@/components/card-spotlight";
+import Component from '@/components/cardforlogin';
+
 
 
 
@@ -43,7 +46,7 @@ const onSubmit = async (e: React.FormEvent) => {
 
 
   return (
-  <div className='border rounded bg-black bg-opacity-20 absolute top-[30vh] left-[70vw] z-10 h-[20vh] text-white w-[20vw]'>
+  <div className=' absolute top-[0vh] left-[70vw] z-10 h-[20vh] text-white w-[30vw]'>
       {user ? (
         <div>
           <p>Welcome, {user.name}!</p>
@@ -54,18 +57,12 @@ const onSubmit = async (e: React.FormEvent) => {
         </div>
       ) : (
         <div className='flex flex-col items-center w-2/3 z-10'>
-          LOG IN <br/>
-<form action="submit" className='flex flex-col'>
-  <p className='mt-3'>e-mail:</p>
-  <input type="text" placeholder="email" name="email" id="email" />
-  <p className='mt-5'>password:</p>
-  <input type="password" placeholder="password" name="password" id="password" />
-  <input type="submit" value="Login" className='btn btn-primary mb-10 mt-3' />
-</form>
+        <Component/>
 
-        <a href="/api/auth/login" className="btn btn-primary btn-margin">
+        {/* <a href="/api/auth/login" className="btn btn-primary btn-margin absolute">
           Log in using gmail
-        </a>
+        </a> */}
+        
         </div>
       )}
     </div>
