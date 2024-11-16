@@ -61,7 +61,7 @@ icon: User
 
 export function AppSidebar() {
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="z-10">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>AMBER</SidebarGroupLabel>

@@ -53,40 +53,86 @@ export default function LandingPage() {
 
         {/* Featured Courses */}
         <section className="py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold mb-8">Featured Courses</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((course) => (
-                <Card key={course}>
-                  <CardContent className="p-0">
-                    <Image src={`/placeholder.svg?height=200&width=400`} alt="Course thumbnail" width={400} height={200} className="w-full h-48 object-cover" />
-                    <div className="p-4">
-                      <Badge className="mb-2">Bestseller</Badge>
-                      <h3 className="text-lg font-semibold mb-2">Complete Web Development Bootcamp</h3>
-                      <p className="text-sm text-gray-500 mb-2">John Doe</p>
-                      <div className="flex items-center mb-2">
-                        <span className="text-yellow-400 font-bold mr-1">4.7</span>
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className="w-4 h-4 fill-current text-yellow-400" />
-                          ))}
-                        </div>
-                        <span className="text-sm text-gray-500 ml-1">(1,234)</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold">₹499</span>
-                        <span className="text-sm line-through text-gray-500">₹1,999</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+  <div className="container mx-auto px-4">
+    <h2 className="text-3xl font-bold mb-8">Featured Courses</h2>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {[
+        {
+          id: 1,
+          title: "Complete Web Development Bootcamp",
+          author: "John Doe",
+          rating: 4.7,
+          reviews: 1234,
+          price: 499,
+          originalPrice: 1999,
+          image: "https://img.freepik.com/free-psd/e-learning-template-design_23-2151081790.jpg?t=st=1731735981~exp=1731739581~hmac=378fd6aec9d54470bcc4675585ae5b61fbb4f202cce63c08b246e99cd5b3e3a8&w=1480",
+          badge: "Bestseller",
+        },
+        {
+          id: 2,
+          title: "Master Python for Data Science",
+          author: "Jane Smith",
+          rating: 4.8,
+          reviews: 987,
+          price: 699,
+          originalPrice: 2499,
+          image: "https://img.freepik.com/free-psd/e-learning-banner-template-design_23-2149585649.jpg?t=st=1731736068~exp=1731739668~hmac=7f6991fab238376db1afc141fbd59eb2b89121f0bf32d281162c3dbb3a935f06&w=1480",
+          badge: "Trending",
+        },
+        {
+          id: 3,
+          title: "UI/UX Design Fundamentals",
+          author: "Alex Johnson",
+          rating: 4.6,
+          reviews: 456,
+          price: 299,
+          originalPrice: 1499,
+          image: "https://img.freepik.com/free-psd/back-school-online-banner-template_23-2148876052.jpg?semt=ais_hybrid",
+          badge: "New",
+        },
+      ].map((course) => (
+        <Card key={course.id}>
+          <CardContent className="p-0">
+            <Image
+              src={course.image}
+              alt={`${course.title} thumbnail`}
+              width={400}
+              height={200}
+              className="w-full h-48 object-cover"
+            />
+            <div className="p-4">
+              <Badge className="mb-2">{course.badge}</Badge>
+              <h3 className="text-lg font-semibold mb-2">{course.title}</h3>
+              <p className="text-sm text-gray-500 mb-2">{course.author}</p>
+              <div className="flex items-center mb-2">
+                <span className="text-yellow-400 font-bold mr-1">{course.rating}</span>
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-4 h-4 fill-current ${
+                        star <= Math.round(course.rating) ? "text-yellow-400" : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-500 ml-1">({course.reviews})</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold">₹{course.price}</span>
+                <span className="text-sm line-through text-gray-500">₹{course.originalPrice}</span>
+              </div>
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+</section>
+
 
         {/* Categories */}
-        <section className="bg-gray-100 py-16">
+        <section className="bg-gray-100 py-16 text-black">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold mb-8">Top Categories</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

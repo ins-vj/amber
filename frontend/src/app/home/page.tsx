@@ -2,7 +2,12 @@ import AboutUs from '@/components/aboutus';
 import { HeroParallax } from '@/components/hero-parallax'
 import Navbar from '@/components/navbar';
 import WhyUs from '@/components/whyus';
+import { CardHoverEffectDemo } from '@/components/whyus2';
 import React from 'react'
+import { TextRevealCardPreview } from './textreveal';
+import Iphone15Pro from '@/components/ui/iphone-15-pro';
+import Safari from '@/components/ui/safari';
+import { BorderBeam } from '@/components/ui/border-beam';
 
 const page = () => {
   const products = [
@@ -22,13 +27,30 @@ const page = () => {
     { title: "Product 14", link: "/product14", thumbnail: "https://img.freepik.com/free-psd/flat-design-vegan-template_23-2149664954.jpg?uid=R136547790&ga=GA1.1.1635994716.1728833539&semt=ais_hybrid" },
     { title: "Product 15", link: "/product15", thumbnail: "https://img.freepik.com/free-psd/world-population-day-youtube-cover-template_23-2150445823.jpg?uid=R136547790&ga=GA1.1.1635994716.1728833539&semt=ais_hybrid" }
   ];
-
+  const User={name: "Vikrant",
+    imgUrl: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+  };
   return (
-    <div>
-      <Navbar />
+    <div className='w-full'>
+      
+      
+     
+        
+      <Navbar student={User}/>
       <HeroParallax products={products} />
-      <WhyUs />
+      <CardHoverEffectDemo/>
+      
+      <div className='relative h-[100vh] w-[90vw] flex'>
+      <TextRevealCardPreview/>
+      <div className='flex'>
+      <Iphone15Pro/>
+      <Safari/>
+      </div>
+      <BorderBeam/>
+      </div>
       <AboutUs />
+     
+      
     </div>
   );
 };

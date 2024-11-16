@@ -15,9 +15,9 @@ export function WordRotate({
   words,
   duration,
   framerProps = {
-    initial: { opacity: 0, y: -50 },
+    initial: { opacity: 0, y: 50 },
     animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: 50 },
+    exit: { opacity: 0, y: -50 },
     transition: { duration: 0.25, ease: "easeOut" },
   },
   className,
