@@ -64,7 +64,7 @@ export const firstJWTw = asyncHandler(async (req, res, next) => {
   } else if (name && email && password) {
     return handleManualSignup(req, res, next,{existingAccessToken,existingRefreshToken});
   } else {
-    return next(new ApiError(400, "Invalid request. Please provide either Google auth token or name, email, and password"));
+    return next(new ApiError(400, "Invalid request. Please either try Google SignIn or Manual Signup"));
   }
 });
 
@@ -141,6 +141,26 @@ const handleGoogleAuth_web = async (req, res, next) => {
 
 const handleManualSignup = async (req, res, next, { existingAccessToken, existingRefreshToken }) => {
   const { name, email, password } = req.body;
+  try {
+    // Check if name exists in the database
+    const existingName = await amber.user.findUnique({ 
+      where:{username:name} });
+
+    // Check if email exists in the database
+    const existingEmail = await amber.user.findUnique({ 
+      where:{email} });
+    if (existingEmail && !existingName) {
+      return next(new ApiError(400, "Email is already registred try using correct username"));
+    }
+    if (!existingEmail && existingName) {
+      return next(new ApiError(400, "Username already exist"));
+    }
+
+    // If both name and email are unique, call the next middleware
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
   console.log(existingAccessToken)
   try {
     const existingUser = await amber.user.findUnique({ 
@@ -149,6 +169,9 @@ const handleManualSignup = async (req, res, next, { existingAccessToken, existin
     console.log(existingUser)
     if (existingUser) {
       // Verify password
+      if(!existingUser.password){
+        return next(new ApiError(401, "Try Google Login and Set Password First"))
+      }
       const isPasswordValid = await bcrypt.compare(password, existingUser.password);
       if (!isPasswordValid) {
         return next(new ApiError(401, "Invalid credentials"));
