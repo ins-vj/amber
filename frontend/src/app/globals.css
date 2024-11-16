@@ -25,6 +25,9 @@ body.with-sidebar {
 
 
 .main-content {
+  position:absolute;
+  top:0;
+  left:4rem;
   width: 100%;
   max-width: 100%;
 }

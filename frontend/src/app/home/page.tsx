@@ -41,11 +41,29 @@ const page = () => {
       <CardHoverEffectDemo/>
       
       <div className='relative h-[100vh] w-[90vw] flex'>
-      <TextRevealCardPreview/>
-      <div className='flex'>
-      <Iphone15Pro/>
-      <Safari/>
+        <div className='absolute left-0'>
+      <TextRevealCardPreview />
       </div>
+<div className="flex bg-black">
+  <Iphone15Pro
+    className="size-3/5 z-20 absolute left-[60vw] top-[20vh]"
+    style={{
+      transform: 'perspective(1000px) rotateX(10deg) rotateY(-10deg)',
+      transformOrigin: 'center',
+    }}
+    src="/images/phoneimg.jpeg"
+  />
+  <Safari
+    className="z-10 absolute top-1 left-[30vw] size-3/4"
+    style={{
+      transform: 'perspective(1000px) rotateX(7deg) rotateY(10deg)',
+      transformOrigin: 'center',
+    }}
+    url="amber.com/landingpage"
+    src="/images/pcimg2.png"
+  />
+</div>
+
       <BorderBeam/>
       </div>
       <AboutUs />
