@@ -1,11 +1,20 @@
 "use client"
 import { HoverEffect } from "@/components/ui/card-hover-effect";
+import { BorderBeam } from "./ui/border-beam";
+import BlurFade from "./ui/blur-fade";
+import { TextRevealCardPreview } from "@/app/home/textreveal";
  
 export function CardHoverEffectDemo() {
   return (
-    <div className="max-w-5xl mx-auto px-8">
-        <div className="text-4xl text-center"> Why AMBER?</div>
+    <div className="max-w-[90vw] mx-auto pb-7 h-[100vh] relative mt-1 mb-2 shadow-md top-[-30vh] border">
+      {/* <div className="text-4xl text-center"> Why AMBER?</div> */}
+      <TextRevealCardPreview className={"relative z-10 bg-transparent top-[-10vh]"}/>
+      <BlurFade delay={0} inView duration={0.8}>
+      <div className="max-w-[90vw] mx-auto py-5 px-[10vw] relative mt-1 mb-5 shadow-md top-[-30vh]">
       <HoverEffect items={reasons} />
+      </div>
+      </BlurFade>
+      <BorderBeam/>
     </div>
   );
 }

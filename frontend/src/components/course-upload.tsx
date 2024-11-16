@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Bold, Italic, List, ListOrdered, Plus, Upload, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Subtopic {
   id: string
@@ -29,7 +30,7 @@ interface CourseDetails {
   price: string
 }
 
-export default function CourseUpload() {
+export default function CourseUpload({ className }: { className?: string }) {
   const [courseDetails, setCourseDetails] = useState<CourseDetails>({
     name: '',
     description: '',
@@ -41,6 +42,11 @@ export default function CourseUpload() {
     price: ''
   })
   const [chapters, setChapters] = useState<Chapter[]>([])
+
+  // State for selected files
+  const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
+  const [selectedBanner, setSelectedBanner] = useState<File | null>(null);
+  const [selectedPromoVideo, setSelectedPromoVideo] = useState<File | null>(null);
 
   const updateCourseDetails = (field: keyof CourseDetails, value: string) => {
     setCourseDetails(prev => ({ ...prev, [field]: value }))
@@ -86,9 +92,43 @@ export default function CourseUpload() {
     ))
   }
 
+  // File selection handlers
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setSelectedThumbnail(e.target.files[0]);
+      updateCourseDetails('imageUrl', URL.createObjectURL(e.target.files[0]));
+    }
+  };
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setSelectedBanner(e.target.files[0]);
+    }
+  };
+
+  const handlePromoVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setSelectedPromoVideo(e.target.files[0]);
+    }
+  };
+
+  const removeThumbnail = () => {
+    setSelectedThumbnail(null);
+    updateCourseDetails('imageUrl', '');
+  };
+
+  const removeBanner = () => {
+    setSelectedBanner(null);
+  };
+
+  const removePromoVideo = () => {
+    setSelectedPromoVideo(null);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-8 space-y-8 text-black bg-blue-100">
+    <div className={cn("max-w-4xl mx-auto p-8 space-y-8 text-black bg-blue-100 z-10", className)}>
       <div className="space-y-4">
+        <p className='text -4xl font-bold'>UPLOAD YOUR COURSES ON OUR PLATFORM</p>
         <div>
           <p className="text-sm text-gray-600 mb-2">
             Your course landing page is crucial to your success. If it's done right, it can also help you gain visibility in search engines.
@@ -144,18 +184,6 @@ export default function CourseUpload() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* <div>
-              <label className="block text-sm font-medium mb-1">Language</label>
-              <select className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option>English (US)</option>
-              </select>
-            </div> */}
-            {/* <div>
-              <label className="block text-sm font-medium mb-1">Level</label>
-              <select className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option>-- Select Level --</option>
-              </select>
-            </div> */}
             <div>
               <label className="block text-sm font-medium mb-1">Category</label>
               <select 
@@ -172,40 +200,92 @@ export default function CourseUpload() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Subcategory</label>
-                            <textarea
+              <textarea
                 className="w-full p-2 min-h-[50px] focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={courseDetails.subCategory}
                 onChange={(e) => updateCourseDetails('subCategory', e.target.value)}
               />
             </div>
-                
-              
-            
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Course image</label>
+            <label className="block text-sm font-medium mb-1">Course Thumbnail image</label>
             <div className="border rounded p-4">
               <div className="aspect-video bg-gray-100 rounded mb-4">
-                <img
-                  src="https://s.udemycdn.com/course/750x422/placeholder.jpg"
-                  alt="Course preview"
-                  className="w-full h-full object-cover rounded"
+                <label htmlFor="thumbnail-upload" className="cursor-pointer">
+                  {selectedThumbnail ? (
+                    <img
+                      src={URL.createObjectURL(selectedThumbnail)}
+                      alt="Course Thumbnail"
+                      className="w-full h-full object-cover rounded"
+                    />
+                  ) : (
+                    <img
+                      src="https://s.udemycdn.com/course/750x422/placeholder.jpg"
+                      alt="Course preview"
+                      className="w-full h-full object-cover rounded"
+                    />
+                  )}
+                </label>
+                <input
+                  id="thumbnail-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleThumbnailChange}
                 />
               </div>
-              <div className="flex items-center justify-between">
+              <div className=" flex items-center justify-between">
                 <div className="text-sm text-gray-600">
                   <p>Upload your course image here. It must meet our course image quality standards to be accepted.</p>
                   <p className="text-xs mt-1">Important guidelines: 750x422 pixels; .jpg, .jpeg, .gif, or .png.; no text on the image.</p>
                 </div>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  {/* Upload File */}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="w-full"/>
-                    {/* onChange={(e) => updateCourseDetails('imageUrl', URL.createObjectURL(e.target.files?.[0]))}  */}
-                </button>
+                {selectedThumbnail && (
+                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" onClick={removeThumbnail}>
+                    Remove File
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Banner image</label>
+            <div className="border rounded p-4">
+              <div className="aspect-video bg-gray-100 rounded mb-4">
+                <label htmlFor="banner-upload" className="cursor-pointer">
+                  {selectedBanner ? (
+                    <img
+                      src={URL.createObjectURL(selectedBanner)}
+                      alt="Banner"
+                      className="w-full h-full object-cover rounded"
+                    />
+                  ) : (
+                    <img
+                      src="https://s.udemycdn.com/course/750x422/placeholder.jpg"
+                      alt="Banner preview"
+                      className="w-full h-full object-cover rounded"
+                    />
+                  )}
+                </label>
+                <input
+                  id="banner-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBannerChange}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  <p>Upload your Banner here. It must meet quality standards to be accepted.</p>
+                  <p className="text-xs mt-1">Important guidelines: 750x422 pixels; .jpg, .jpeg, .gif, or .png.; no text on the image.</p>
+                </div>
+                {selectedBanner && (
+                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" onClick={removeBanner}>
+                    Remove File
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -214,27 +294,34 @@ export default function CourseUpload() {
             <label className="block text-sm font-medium mb-1">Promotional video</label>
             <div className="border rounded p-4">
               <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
-                <Upload className="w-8 h-8 text-gray-400" />
+                {selectedPromoVideo ? (
+                  <video controls className="w-full h-full object-cover rounded">
+                    <source src={URL.createObjectURL(selectedPromoVideo)} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <Upload className="w-8 h-8 text-gray-400" />
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-600">
                   <p>Your promo video is a quick and compelling way for students to preview what they'll learn in your course.</p>
                 </div>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-
-
-
                 <input
-                        type="file"
-                        accept="video/*"
-                        className="w-full"
-                        // onChange={(e) => updateSubtopic(chapter.id, subtopic.id, { videoFile: e.target.files?.[0] || null })}
-                      />
-
-
-
-                  {/* Upload File */}
-                </button>
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  id="promo-video-upload"
+                  onChange={handlePromoVideoChange}
+                />
+                <label htmlFor="promo-video-upload" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer">
+                  Upload File
+                </label>
+                {selectedPromoVideo && (
+                  <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" onClick={removePromoVideo}>
+                    Remove File
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -254,7 +341,7 @@ export default function CourseUpload() {
               type="number"
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={courseDetails.price}
-              onChange={(e) => updateCourseDetails('price', e.target.value)}
+              onChange={(e ) => updateCourseDetails('price', e.target.value)}
             />
           </div>
         </div>
@@ -314,24 +401,6 @@ export default function CourseUpload() {
                         onChange={(e) => updateSubtopic(chapter.id, subtopic.id, { videoDescription: e.target.value })}
                       />
                     </div>
-                    {/* <div>
-                      <label className="block text-sm font-medium mb-1">Subtitles</label>
-                      <input
-                        type="file"
-                        accept=".vtt,.srt"
-                        className="w-full"
-                        onChange={(e) => updateSubtopic(chapter.id, subtopic.id, { subtitleFile: e.target.files?.[0] || null })}
-                      />
-                    </div> */}
-                    {/* <div>
-                      <label className="block text-sm font-medium mb-1">Additional Resources</label>
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx,.txt"
-                        className="w-full"
-                        onChange={(e) => updateSubtopic(chapter.id, subtopic.id, { notesFile: e.target.files?.[0] || null })}
-                      />
-                    </div> */}
                   </div>
                 </div>
               ))}

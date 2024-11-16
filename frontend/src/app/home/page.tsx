@@ -1,3 +1,4 @@
+
 import AboutUs from '@/components/aboutus';
 import { HeroParallax } from '@/components/hero-parallax'
 import Navbar from '@/components/navbar';
@@ -8,6 +9,10 @@ import { TextRevealCardPreview } from './textreveal';
 import Iphone15Pro from '@/components/ui/iphone-15-pro';
 import Safari from '@/components/ui/safari';
 import { BorderBeam } from '@/components/ui/border-beam';
+import DotPattern from '@/components/ui/dot-pattern';
+import { cn } from "@/lib/utils";
+import PyramidLoader from '@/components/ui/pyramid';
+
 
 const page = () => {
   const products = [
@@ -31,7 +36,7 @@ const page = () => {
     imgUrl: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
   };
   return (
-    <div className='w-full'>
+    <div className='main'>
       
       
      
@@ -39,10 +44,11 @@ const page = () => {
       <Navbar student={User}/>
       <HeroParallax products={products} />
       <CardHoverEffectDemo/>
-      
+
       <div className='relative h-[100vh] w-[90vw] flex'>
         <div className='absolute left-0'>
-      <TextRevealCardPreview />
+      {/* <TextRevealCardPreview /> */}
+      <PyramidLoader/>
       </div>
 <div className="flex bg-black">
   <Iphone15Pro
@@ -68,7 +74,16 @@ const page = () => {
       </div>
       <AboutUs />
      
-      
+      <DotPattern
+        width={20}
+        height={20}
+        cx={1}
+        cy={1}
+        cr={1}
+        className={cn(
+          "[mask-image:radial-gradient(1200px_circle_at_center,white,transparent)] ",
+        )}
+      />
     </div>
   );
 };

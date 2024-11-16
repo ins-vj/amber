@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import  Link  from "next/link";
 
 const instructor = {
   name: "Dr. Jane Smith",
@@ -79,10 +80,12 @@ export default function InstructorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between items-center">
+                    <Link href={`/course-info`}>
                     <Button variant="outline" size="sm">
                       <Book className="mr-2 h-4 w-4" />
                       View Course
                     </Button>
+                    </Link>
                     <Badge variant="secondary" className="flex items-center">
                       <Users className="mr-1 h-3 w-3" />
                       {course.totalStudents} total

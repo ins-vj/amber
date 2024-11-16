@@ -6,8 +6,43 @@ import { Star, Search } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import FancyButton from "./ui/fancybutton"
+import IconCloud from "./ui/icon-cloud"
+import BoxReveal from "./ui/box-reveal"
 
 export default function LandingPage() {
+  const slugs = [
+    "typescript",
+    "javascript",
+    "dart",
+    "java",
+    "react",
+    "flutter",
+    "android",
+    "html5",
+    "css3",
+    "nodedotjs",
+    "express",
+    "nextdotjs",
+    "prisma",
+    "amazonaws",
+    "postgresql",
+    "firebase",
+    "nginx",
+    "vercel",
+    "testinglibrary",
+    "jest",
+    "cypress",
+    "docker",
+    "git",
+    "jira",
+    "github",
+    "gitlab",
+    "visualstudiocode",
+    "androidstudio",
+    "sonarqube",
+    "figma",
+  ];
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
@@ -135,16 +170,50 @@ export default function LandingPage() {
         <section className="bg-gray-100 py-16 text-black">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold mb-8">Top Categories</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white px-4">
               {['Web Development', 'Data Science', 'Business', 'Design', 'Marketing', 'IT and Software', 'Personal Development', 'Photography'].map((category) => (
-                <Link key={category} href="#" className="h-auto py-8 flex flex-col items-center justify-center bg-white hover:bg-gray-50 border rounded-lg">
-                  <span className="text-lg font-semibold">{category}</span>
+                <Link key={category} href="#" className="h-auto py-8 flex flex-col items-center justify-center rounded-lg">
+                  {/* <span className="text-lg font-semibold">{category}</span> */}
+                  <FancyButton>{category}</FancyButton>
                 </Link>
               ))}
             </div>
           </div>
         </section>
+<div className="flex justify-center items-center">
+  <div className="w-1/3 p-4 pr-[10vw] text-black">
+  
+  <BoxReveal boxColor={"#5046e6"} duration={0.75}>
+        <p className="text-[3.5rem] font-semibold">
+          Amber<span className="text-[#5046e6]">.</span>
+        </p>
+      </BoxReveal>
+ 
+      <BoxReveal boxColor={"#5046e6"} duration={0.75}>
+        <h2 className="mt-[.5rem] text-[1rem]">
+          E-learning platform for{" "}
+          <span className="text-[#5046e6]">Everyone</span>
+        </h2>
+      </BoxReveal>
+ 
+      <BoxReveal boxColor={"#5046e6"} duration={0.75}>
+        <div className="mt-6">
+          <p>
+            -&gt; 20+ free and paid courses built on
+            <span className="font-semibold text-[#5046e6]"> Web Dev</span>,
+            <span className="font-semibold text-[#5046e6]"> App Dev</span>,
+            <span className="font-semibold text-[#5046e6]"> AI/ML</span>,
+            and
+            <span className="font-semibold text-[#5046e6]"> Data Science</span>
+            . <br />
+            -&gt; Made for complete beginners. <br />
+          </p>
+        </div>
+      </BoxReveal>
 
+  </div>
+              <IconCloud iconSlugs={slugs}/>
+</div>
         {/* Become an Instructor */}
         <section className="py-16">
           <div className="container mx-auto px-4">
