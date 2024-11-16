@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import FancyButton from "./ui/fancybutton"
 import IconCloud from "./ui/icon-cloud"
 import BoxReveal from "./ui/box-reveal"
+import SearchBar from "./searchbar"
 
 export default function LandingPage() {
   const slugs = [
@@ -50,10 +51,11 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold text-purple-600">LearnHub</Link>
           <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2">
+            {/* <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2">
               <Search className="text-gray-400" size={20} />
               <Input type="search" placeholder="Search for courses" className="bg-transparent border-none focus:outline-none" />
-            </div>
+            </div> */}
+            <SearchBar/>
             <nav className="hidden md:flex space-x-4">
               <Link href="#" className="text-gray-600 hover:text-purple-600">Categories</Link>
               <Link href="#" className="text-gray-600 hover:text-purple-600">Teach</Link>

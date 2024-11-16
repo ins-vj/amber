@@ -1,9 +1,11 @@
-const express = require('express');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const { PrismaClient } = require('@prisma/client');
-require('dotenv').config();
-
+import express from 'express';
+import multer from 'multer';
+import cloudinary from 'cloudinary';
+import {PrismaClient}  from'@prisma/client';
+import dotenv from 'dotenv';
+dotenv.config({
+    path:"./.env"
+});
 const app = express();
 const port = process.env.PORT || 3000;
 const prisma = new PrismaClient();
