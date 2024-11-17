@@ -9,11 +9,12 @@ const Navbar = ({ student }: any) => {
   const currentStudent = student ?? defaultStudent;
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between bg-[#272729] p-10 shadow-lg">
-      <div className="text-4xl font-bold text-white tracking-wide">Amber</div>
+    <nav className="sticky top-0 z-50 flex items-center justify-between bg-[#272729] h-[12vh] px-10 shadow-lg">
+      <div className="text-4xl font-bold text-white tracking-wide"><a href="/home">Amber</a></div>
 
       <div className="space-x-8">
-        <AnimatedIconButton text="Home" icon="Home" />
+        {/* <AnimatedIconButton text="Home" icon="Home" /> */}
+        <button className="px-4 py-2 text-xl hover:bg-black h-[10vh] w-[7vw]">Home</button>
         <AnimatedIconButton text="My Cart" icon="ShoppingCart" />
         <AnimatedIconButton text="Setting" icon="Settings" />
 

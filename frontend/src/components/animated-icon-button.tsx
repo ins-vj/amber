@@ -50,7 +50,7 @@ export default function AnimatedIconButton({ text, icon }: AnimatedIconButtonPro
   return (
     <button
       className={`relative overflow-hidden px-4 py-2 text-xl rounded-full transition-colors duration-300 ${
-        isHovered ? 'bg-white text-black' : 'bg-black text-white'
+        isHovered ? 'bg-white text-black' : 'bg-black text-white shadow-xl'
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

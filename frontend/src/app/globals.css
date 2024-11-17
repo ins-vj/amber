@@ -11,6 +11,11 @@ body {
   overflow-x:hidden ;
 }
 
+#player.player-dimensions {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* Styles when sidebar is present */
 body.with-sidebar {
   --sidebar-width: 16rem; /* Sidebar width */
