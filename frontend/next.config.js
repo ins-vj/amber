@@ -3,7 +3,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['img.freepik.com'],
+    domains: ['img.freepik.com','t3.ftcdn.net'],
+
   },
   // add other configuration options here
 };

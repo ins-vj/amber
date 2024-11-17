@@ -56,7 +56,7 @@ const onSubmit = async (e: React.FormEvent) => {
           </a>
         </div>
       ) : (
-        <div className='flex flex-col items-center w-2/3 z-10'>
+        <div className=''>
         <Component/>
 
         {/* <a href="/api/auth/login" className="btn btn-primary btn-margin absolute">

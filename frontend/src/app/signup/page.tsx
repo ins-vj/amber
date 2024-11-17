@@ -1,39 +1,41 @@
-"use client";
+// "use client";
 import React, { useState } from 'react';
-import Spline from '@splinetool/react-spline/next';
+import Spline from '@/components/spline/signin';
+import Component from '@/components/cardforlogin';
+import SignupComponent from '@/components/cardforsignup';
 
-const SignUp: React.FC = () => {
-  const [name, setName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>('');
+// const SignUp: React.FC = () => {
+//   const [name, setName] = useState<string>('');
+//   const [email, setEmail] = useState<string>('');
+//   const [password, setPassword] = useState<string>('');
+//   const [error, setError] = useState<string>('');
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+//   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+//     e.preventDefault();
 
-    if (name && email && password) {
-      // Handle successful signup, e.g., API call to register the user
-    } else {
-      setError('Please fill out all fields');
-    }
-  };
-
+//     if (name && email && password) {
+//       // Handle successful signup, e.g., API call to register the user
+//     } else {
+//       setError('Please fill out all fields');
+//     }
+//   };
+export default function page(){
   return (
     <div className="flex w-full h-screen">
       {/* Right Half - Spline Model */}
-      <div className="w-1/2 h-full">
-        <Spline
-          scene="https://prod.spline.design/RDgrQ7VBrW9D-a90/scene.splinecode" 
-          className="w-full h-full"
-        />
-      </div>
+     
+        <Spline/>
+        <div className='absolute top-[0vh] left-[70vw] w-[30vw] z-10'>
+<SignupComponent/>
+</div>
+<img src='/images/signinlogo.jpeg' className="h-[10vh] absolute top-[0vh] left-5 mix-blend-lighten" />
 
       {/* Left Half - Sign Up Form */}
-      <div className="w-1/2 flex items-center justify-center bg-[#f8bcac] bg-opacity-90 border rounded-lg">
+      {/* <div className="w-1/2 flex items-center justify-center bg-[#f8bcac] bg-opacity-90 border rounded-lg">
         <div className="w-3/4 space-y-4 p-8 rounded">
-          <h2 className="text-2xl font-bold text-center text-white">Sign Up</h2>
+          <h2 className="text-2xl font-bold text-center text-white">Sign Up</h2> */}
           {/* {error && <p className="text-red-500">{error}</p>} */}
-          <form onSubmit={handleSignUp} className="space-y-4">
+          {/* <form onSubmit={handleSignUp} className="space-y-4">
             <div>
               <label htmlFor="name" className="block mb-2 text-sm font-medium text-white">Name</label>
               <input
@@ -74,10 +76,10 @@ const SignUp: React.FC = () => {
               Sign Up
             </button>
           </form>
-        </div>
-      </div>
+        </div> 
+      </div>*/}
     </div>
   );
 };
 
-export default SignUp;
+// export default SignUp;

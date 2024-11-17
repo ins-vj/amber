@@ -1,6 +1,6 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Book, Clock, TrendingUp, Users } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import  Link  from "next/link";
+import Link from "next/link";
 
-const instructor = {
+const dummyInstructor = {
   name: "Dr. Jane Smith",
   image: "/placeholder.svg?height=400&width=400",
   qualifications: "Ph.D. in Computer Science, M.Sc. in Data Science",
@@ -27,9 +27,61 @@ const instructor = {
 
 export default function InstructorDashboard() {
   const router = useRouter();
+  const [instructor, setInstructor] = useState(dummyInstructor); // Initialize with dummy data
+  const [qualifications, setQualifications] = useState(dummyInstructor.qualifications);
+  const [isEditing, setIsEditing] = useState(false); // State to track if we are editing qualifications
+
+  useEffect(() => {
+    const fetchInstructorData = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/instructor-info");
+        if (response.ok) {
+          const data = await response.json();
+          if (data) {
+            setInstructor(data);
+            setQualifications(data.qualifications);
+          } else {
+            console.warn("No instructor data returned, using dummy data.");
+          }
+        } else {
+          console.error("Failed to fetch instructor data:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching instructor data:", error);
+      }
+    };
+
+    fetchInstructorData();
+  }, []);
 
   const handleCreateCourse = () => {
     router.push("/course-upload");
+  };
+
+  const handleQualificationsChange = (e) => {
+    setQualifications(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const response = await fetch("http://localhost:3000/update-instructor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        qualifications,
+      }),
+    });
+
+    if (response.ok) {
+      alert("Qualifications updated successfully!");
+      const updatedInstructor = await response.json();
+      setInstructor(updatedInstructor);
+      setIsEditing(false); // Hide the editing area after successful update
+    } else {
+      alert("Failed to update qualifications.");
+    }
   };
 
   return (
@@ -43,6 +95,20 @@ export default function InstructorDashboard() {
           </Avatar>
           <h2 className="text-2xl font-bold text-center">{instructor.name}</h2>
           <p className="text-sm text-muted-foreground text-center">{instructor.qualifications}</p>
+          <Button onClick={() => setIsEditing(!isEditing)} className="mt-2">
+            {isEditing ? "Cancel" : "Update Education Level"}
+          </Button>
+          {isEditing && (
+            <form onSubmit={handleSubmit} className="text-center mt-2">
+              <textarea
+                value={qualifications}
+                onChange={handleQualificationsChange}
+                className="border p-2 rounded w-full text-black"
+                rows={3}
+              />
+              <Button type="submit" className="mt-2">Submit Changes</Button>
+            </form>
+          )}
         </div>
         <Separator className="my-6" />
         <div className="text-center">
@@ -58,7 +124,7 @@ export default function InstructorDashboard() {
       {/* Main content */}
       <main className="flex-1 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Learn Hub Dashboard</h1>
+          <h1 className="text-3xl font-bold">Amber Instructor Dashboard</h1>
           <Button onClick={handleCreateCourse}>Create New Course</Button>
         </div>
         <ScrollArea className="h-[calc(100vh-8rem)]">
@@ -80,11 +146,11 @@ export default function InstructorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between items-center">
-                    <Link href={`/course-info`}>
-                    <Button variant="outline" size="sm">
-                      <Book className="mr-2 h-4 w-4" />
-                      View Course
-                    </Button>
+                    <Link href={`/course/${course.name}`}>
+                      <Button variant="outline" size="sm">
+                        <Book className="mr-2 h-4 w-4" />
+                        View Course
+                      </Button>
                     </Link>
                     <Badge variant="secondary" className="flex items-center">
                       <Users className="mr-1 h-3 w-3" />
