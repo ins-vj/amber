@@ -17,11 +17,11 @@ const testing=asyncHandler(async(req,res)=>{
     )
 })//done
 
-const signup = asyncHandler(async (req, res, next) => {
+const signup = asyncHandler(async (req, res) => {
     const { user, accessToken, refreshToken, isExistingUser } = req;
   
     if (!user) {
-      return next(new ApiError(400, "User creation failed"));
+      return new ApiError(400, "User creation failed");
     }
   
     try {
@@ -54,37 +54,110 @@ const signup = asyncHandler(async (req, res, next) => {
         ));
     } catch (error) {
       console.error("Signup response error:", error);
-      return next(new ApiError(500, "An unexpected error occurred during signup"));
+      return new ApiError(500, "An unexpected error occurred during signup");
     }
   });
   //done
   
 const education= asyncHandler(async(req,res)=>{
-    const { name, email, role } = req.body;;
+    const  user  = req.user;
+    console.log("hi")
+    const {educationLevel,schoolingYear,schoolStream,degree,studyYear,specialization}=req.body
     if (!user) {
-      return next(new ApiError(400, "User creation failed"));
+      throw new ApiError(400, "User Verification failed");
     }
-    
+    console.log("hi")
         try {
-            const options = {
-                httpOnly: true,
-                secure: true
+            let updatedUser;
+            if(educationLevel=="SCHOOL"){
+                if(schoolStream&&schoolingYear){
+                    updatedUser = await amber.user.update({
+                        where: {
+                          id: user.id
+                        },
+                        data: {
+                          educationLevel,
+                          schoolingYear,
+                          schoolStream,
+                          // Reset other education fields to null
+                          degree: null,
+                          studyYear: null,
+                          specialization: null
+                        }
+                      });
+                      console.log(updatedUser)
+                }
+                else{
+                    throw new ApiError(401,"Select All fields")
+                }
             }
+            else if(educationLevel=="UNDERGRADUATE"){
+                if (!degree || !studyYear) {
+                    throw new ApiError(400, "Both degree and study year are required for undergraduate");
+                  }
             
-            return res
-            .status(201)
-            .json( new ApiResponse(201,user,"User Eduction Saved Successfully")
-            );
+                  updatedUser = await amber.user.update({
+                    where: {
+                      id: user.id
+                    },
+                    data: {
+                      educationLevel,
+                      degree,
+                      studyYear,
+                      // Reset other education fields to null
+                      schoolingYear: null,
+                      schoolStream: null,
+                      specialization: null
+                    }
+                  });
+            
+
+            }
+            else if(educationLevel=="POSTGRADUATE"){
+                if (!degree || !specialization || !studyYear) {
+                    throw new ApiError(400, "Degree, specialization, and study year are required for postgraduate");
+                  }
+            
+                  updatedUser = await amber.user.update({
+                    where: {
+                      id: user.id
+                    },
+                    data: {
+                      educationLevel,
+                      degree,
+                      studyYear,
+                      specialization,
+                      // Reset other education fields to null
+                      schoolingYear: null,
+                      schoolStream: null
+                    }
+                  });
+            }
+            else{
+                throw new ApiError(401,"First Select EducationLevel")
+            }
+            return res.status(200).json({
+                success: true,
+                message: "Education details updated successfully",
+                data: {
+                  educationLevel: updatedUser.educationLevel,
+                  schoolingYear: updatedUser.schoolingYear,
+                  schoolStream: updatedUser.schoolStream,
+                  degree: updatedUser.degree,
+                  studyYear: updatedUser.studyYear,
+                  specialization: updatedUser.specialization
+                }
+              });
         
           } catch (error) {
             console.error("Error during updation:", error);
             if (error instanceof ApiError) {
-              return next(error);
+              return error;
             }
-            return next(new ApiError(500, "An unexpected error occurred during signup"));
+            throw new ApiError(500, "An unexpected error occurred during signup");
           }
     
-})
+}) //done
 
 const getUserProfile = asyncHandler(async(req, res) => {
     const {username} = req.params

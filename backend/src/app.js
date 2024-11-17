@@ -17,9 +17,11 @@ app.use(cookieParser())
 
 import userRouter from './routes/user.routes.js'
 import courseRouter from './routes/course.routes.js'
+import insRouter  from './routes/instructor.routes.js'
 
 app.use("/api/v1/user", userRouter)
 app.use("/api/v1/course",courseRouter)
+app.use("/api/v1/instructor",insRouter)
 
 app.use((err, req, res, next) => {
   // Check if the error is an instance of ApiError

@@ -249,9 +249,9 @@ model User{
 
 model Instructor{
   id              Int             @id @default(autoincrement())
-  name            String 
+  name            String?
   username        String         @unique
-  password        String 
+  password        String?
   email           String          @unique
   // githubIns       InsGitHubLink?  @relation("InstructorGithub")
   refresh_token   String?

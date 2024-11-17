@@ -269,18 +269,18 @@ const handleManualSignup = async (req, res, next, { existingAccessToken, existin
     
         // 2. Try generating tokens first with temporary data
         // This ensures token generation works before creating user
-        tokens = await generateAccessAndRefreshTokens({
-          email,
-          password: hashedPassword
-        });
-        console.log("tmeporary tokens" , tokens)
+        // tokens = await generateAccessAndRefreshTokens({
+        //   email,
+        //   password: hashedPassword
+        // });
+        // console.log("tmeporary tokens" , tokens)
         // 3. Only create user if tokens were generated successfully
         user = await amber.user.create({
           data: {
             username: name,
             email,
             password: hashedPassword,
-            refresh_token: tokens.refreshToken, // Store the refresh token
+            // refresh_token: tokens.refreshToken, // Store the refresh token
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -446,13 +446,14 @@ const handleGoogleAuth_app = async (req, res, next) => {
 
 
 
-export const verifyJWTa = asyncHandler(async (req, res, next) => {
+export const verifyJWTa= asyncHandler(async (req, res, next) => {
   const auth_token =  req.header("Authorization")?.split(' ')[1];
   const cookie_token=req.cookies?.accessToken;
 
   if (!(auth_token || cookie_token)){
-    return next(new ApiError(401, "Unauthorized request: Token not provided"));
+    return next(new ApiError(401, "Unauthorized request: Signin is Required"));
   }
+  console.log(auth_token)
   if(auth_token){
   try {
     // Attempt to fetch user info based on the token
@@ -468,7 +469,7 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
     // Check if user exists in the database
     try {
       const user = await amber.user.findUnique({
-        where: { username: userinfo.email },
+        where: { email: userinfo.email },
         select: {
           id:true,
           name :true,       
@@ -506,17 +507,17 @@ export const verifyJWTa = asyncHandler(async (req, res, next) => {
   else if(cookie_token){
     try {
       // Attempt to fetch user info based on the token
-      const decodedToken = jwt.verify(cookie_token, process.env.ACCESS_TOKEN_SECRET)
+      const decodedToken = await verifyToken(cookie_token, 'access')
     
     
-        if (!decodedToken) {
+        if (!decodedToken.valid) {
             throw new ApiError(401, "UnAuthorised Access")
         }
   
       // Check if user exists in the database
       try {
         const user = await amber.user.findUnique({
-          where: { username: userinfo.email },
+          where: { email: decodedToken.decoded.email },
           select: {
             id:true,
             name :true,       
@@ -559,7 +560,7 @@ export const verifyJWTw= asyncHandler(async (req, res, next) => {
   const cookie_token=req.cookies?.accessToken;
 
   if (!(auth_token || cookie_token)){
-    return next(new ApiError(401, "Unauthorized request: Token not provided"));
+    return next(new ApiError(401, "Unauthorized request: Signin is Required"));
   }
   console.log(auth_token)
   if(auth_token){
@@ -577,7 +578,7 @@ export const verifyJWTw= asyncHandler(async (req, res, next) => {
     // Check if user exists in the database
     try {
       const user = await amber.user.findUnique({
-        where: { username: userinfo.email },
+        where: { email: userinfo.email },
         select: {
           id:true,
           name :true,       
@@ -615,17 +616,17 @@ export const verifyJWTw= asyncHandler(async (req, res, next) => {
   else if(cookie_token){
     try {
       // Attempt to fetch user info based on the token
-      const decodedToken = jwt.verify(cookie_token, process.env.ACCESS_TOKEN_SECRET)
+      const decodedToken = await verifyToken(cookie_token, 'access')
     
     
-        if (!decodedToken) {
+        if (!decodedToken.valid) {
             throw new ApiError(401, "UnAuthorised Access")
         }
   
       // Check if user exists in the database
       try {
         const user = await amber.user.findUnique({
-          where: { username: userinfo.email },
+          where: { email: decodedToken.decoded.email },
           select: {
             id:true,
             name :true,       

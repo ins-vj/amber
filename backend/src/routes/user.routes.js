@@ -13,7 +13,7 @@ import {
     updateAccountDetails
 } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
-import { verifyJWTw,verifyJWTa,firstJWTw,firstJWTa} from "../middlewares/auth.middleware.js";
+import { verifyJWTw,verifyJWTa,firstJWTw,firstJWTa} from "../middlewares/auth.usermiddleware.js";
 
 
 const router = Router()
@@ -22,8 +22,8 @@ router.route("/web/testing").post(verifyJWTw,testing)
 router.route("/app/testing").post(verifyJWTa,testing)
 router.route("/web/signup").post(firstJWTw,signup)
 router.route("/app/signup").post(firstJWTa,signup)
-router.route("/web/education").put(verifyJWTw,education)
-router.route("/app/education").put(verifyJWTa,education)
+router.route("/web/education").put(verifyJWTw,education) //for changing from user dashboard also
+router.route("/app/education").put(verifyJWTa,education) //for changing from user dashboard also
 router.route("/:username").get( getUserProfile)
 router.route("/register").post(
     upload.fields([
