@@ -102,7 +102,7 @@ const qualification= asyncHandler(async(req,res)=>{
     });
 
     // Perform all operations in a transaction
-    const result = await amber.$transaction(async (prisma) => {
+    const result = await amber.$transaction(async (amber) => {
       // Verify ownership of qualifications being updated/deleted
       if (qualificationsToUpdate.length > 0 || qualificationsToDelete.length > 0) {
         const existingQuals = await amber.qualification.findMany({
@@ -145,7 +145,7 @@ const qualification= asyncHandler(async(req,res)=>{
 
       // Handle updates
       const updatePromises = qualificationsToUpdate.map(qual => 
-        prisma.qualification.update({
+        amber.qualification.update({
           where: {
             id: qual.id,
             instructorId: user.id
@@ -161,7 +161,7 @@ const qualification= asyncHandler(async(req,res)=>{
 
       // Handle additions
       if (qualificationsToAdd.length > 0) {
-        await prisma.qualification.createMany({
+        await amber.qualification.createMany({
           data: qualificationsToAdd.map(qual => ({
             title: qual.title,
             institution: qual.institution,
@@ -172,7 +172,7 @@ const qualification= asyncHandler(async(req,res)=>{
       }
 
       // Fetch all updated qualifications
-      const updatedQualifications = await prisma.qualification.findMany({
+      const updatedQualifications = await amber.qualification.findMany({
         where: {
           instructorId: user.id
         },
@@ -196,7 +196,144 @@ const qualification= asyncHandler(async(req,res)=>{
 })
 
 const achievement=asyncHandler(async(req,res)=>{
+    const user = req.user;
+  const { 
+    achievementsToAdd = [], 
+    achievementsToUpdate = [], 
+    achievementsToDelete = [] 
+  } = req.body;
 
+  if (!user) {
+    throw new ApiError(400, "Instructor verification failed");
+  }
+
+  try {
+    // Validate input data structure
+    if (!Array.isArray(achievementsToAdd) || 
+        !Array.isArray(achievementsToUpdate) || 
+        !Array.isArray(achievementsToDelete)) {
+      throw new ApiError(400, "Invalid data format. Expected arrays for add, update, and delete operations");
+    }
+
+    // Validation helper function
+    const validateAchievement = (achievement, requireId = false) => {
+      if (requireId && !achievement.id) {
+        throw new ApiError(400, "Achievement ID is required for update/delete operations");
+      }
+      if (!achievement.title || !achievement.referencepic || !achievement.year) {
+        throw new ApiError(400, "Each achievement must have title, referencepic, and year");
+      }
+      const currentYear = new Date().getFullYear();
+      if (achievement.year < 1900 || achievement.year > currentYear) {
+        throw new ApiError(400, `Year must be between 1900 and ${currentYear}`);
+      }
+    };
+
+    // Validate all achievement objects
+    achievementsToAdd.forEach(achievement => validateAchievement(achievement, false));
+    achievementsToUpdate.forEach(achievement => validateAchievement(achievement, true));
+    achievementsToDelete.forEach(id => {
+      if (!Number.isInteger(id)) {
+        throw new ApiError(400, "Invalid achievement ID for deletion");
+      }
+    });
+
+    // Perform all operations in a transaction
+    const result = await amber.$transaction(async (amber) => {
+      // Verify ownership of achievements being updated/deleted
+      if (achievementsToUpdate.length > 0 || achievementsToDelete.length > 0) {
+        const existingAchievements = await amber.achievement.findMany({
+          where: {
+            instructorId: user.id,
+            id: {
+              in: [
+                ...achievementsToUpdate.map(a => a.id),
+                ...achievementsToDelete
+              ]
+            }
+          },
+          select: { id: true }
+        });
+
+        const existingIds = new Set(existingAchievements.map(a => a.id));
+        
+        // Check if all achievements belong to the instructor
+        const invalidUpdateIds = achievementsToUpdate
+          .filter(a => !existingIds.has(a.id))
+          .map(a => a.id);
+          
+        const invalidDeleteIds = achievementsToDelete
+          .filter(id => !existingIds.has(id));
+
+        if (invalidUpdateIds.length > 0 || invalidDeleteIds.length > 0) {
+          throw new ApiError(403, "Some achievements do not belong to this instructor");
+        }
+      }
+
+      // Handle deletions
+      if (achievementsToDelete.length > 0) {
+        await amber.achievement.deleteMany({
+          where: {
+            id: { in: achievementsToDelete },
+            instructorId: user.id
+          }
+        });
+      }
+
+      // Handle updates
+      const updatePromises = achievementsToUpdate.map(achievement => 
+        amber.achievement.update({
+          where: {
+            id: achievement.id,
+            instructorId: user.id
+          },
+          data: {
+            title: achievement.title,
+            referencepic: achievement.referencepic,
+            year: achievement.year
+          }
+        })
+      );
+      await Promise.all(updatePromises);
+
+      // Handle additions
+      if (achievementsToAdd.length > 0) {
+        await amber.achievement.createMany({
+          data: achievementsToAdd.map(achievement => ({
+            title: achievement.title,
+            referencepic: achievement.referencepic,
+            year: achievement.year,
+            instructorId: user.id
+          }))
+        });
+      }
+
+      // Fetch all updated achievements
+      const updatedAchievements = await amber.achievement.findMany({
+        where: {
+          instructorId: user.id
+        },
+        orderBy: {
+          year: 'desc'
+        }
+      });
+
+      return updatedAchievements;
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Achievements updated successfully",
+      data: result
+    });
+
+  } catch (error) {
+    console.error("Error during achievement update:", error);
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, "An unexpected error occurred while updating achievements");
+  }
 })
   export {
     testing,

@@ -18,4 +18,5 @@ router.route("/app/signup").post(firstJWTa,signup)
 router.route("/web/qualification").put(verifyJWTw,qualification)
 router.route("/app/qualification").put(verifyJWTa,qualification)
 router.route("/web/achievement").put(verifyJWTw,achievement)
+router.route("/app/qualification").put(verifyJWTa,achievement)
 export default router
