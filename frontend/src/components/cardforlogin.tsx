@@ -15,6 +15,8 @@ export default function Component() {
     special: false,
     valid: false
   })
+  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
 
   const checkPasswordStrength = (value: string) => {
     const strength = {
@@ -42,7 +44,7 @@ export default function Component() {
 
         <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              Username
+             Username
             </label>
             <input
               id="username"
@@ -50,6 +52,7 @@ export default function Component() {
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Enter your username"
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
 
@@ -65,6 +68,7 @@ export default function Component() {
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Enter your email"
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
@@ -119,12 +123,45 @@ export default function Component() {
           </div>
 
           <div>
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              Enter
-            </button>
+          <button
+  type="submit"
+  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+  onClick={async (e) => {
+    e.preventDefault(); // Prevent the default behavior of the event
+  
+    try {
+      const response = await fetch('http://localhost:5001/api/v1/user/web/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: username,
+          email,
+          password,
+        }),
+      });
+  
+      // Handle non-JSON responses gracefully
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Non-JSON error response:', errorText);
+        alert(`Failed to create account: ${response.statusText || 'Unknown error'}`);
+        return;
+      }
+  
+      const data = await response.json();
+      alert('Account created successfully!');
+      
+    } catch (error) {
+      console.error('Error during signup:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  }}
+  
+>
+  Enter
+</button>
           </div>
 
           <div className="relative">

@@ -5,81 +5,170 @@ import { FaTrophy, FaStar, FaMedal } from "react-icons/fa";
 import Image from "next/image";
 import Navbar from "@/components/navbar";
 
+interface EducationOptions {
+  lvl2: string[];
+  lvl3: string[];
+}
+
+interface EducationUpdateRequest {
+  educationLevel: string;
+  schoolingYear: string;
+  schoolStream: string;
+}
+
+interface Profile {
+  name: string;
+  email: string;
+  educationlvl1: string;
+  educationlvl2: string;
+  educationlvl3: string;
+  profilePicture: string;
+}
+
 const Dashboard: React.FC = () => {
-  const [profile, setProfile] = useState({
-    name: "User Name",
-    email: "user@example.com",
-    educationlvl1: "School",
-    educationlvl2: "12th",
-    educationlvl3: "Science",
+  // Initialize with loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [profile, setProfile] = useState<Profile>({
+    name: "ins_vj1",
+    email: "vikrantjakhar69@gmail.com",
+    educationlvl1: "SCHOOL",
+    educationlvl2: "TWELFTH",
+    educationlvl3: "SCIENCE",
     profilePicture: "/placeholder.svg?height=100&width=100",
   });
+  
   const [tempProfile, setTempProfile] = useState(profile);
   const [isEditingPicture, setIsEditingPicture] = useState(false);
   const [isEditingEducation, setIsEditingEducation] = useState(false);
 
-  const [educationOptions, setEducationOptions] = useState({
-    lvl2: ["12th"],
-    lvl3: ["Science"],
+  const educationLvl1Options = ["SCHOOL", "UNDERGRADUATE", "POSTGRADUATE"];
+
+  const [educationOptions, setEducationOptions] = useState<EducationOptions>({
+    lvl2: ["ELEVENTH", "TWELFTH"],
+    lvl3: ["SCIENCE", "COMMERCE", "ARTS"],
   });
 
   const courses = [
     {
       name: "Basic Web Development",
       progress: 75,
-      image:
-        "https://img.freepik.com/free-psd/e-learning-template-design_23-2151081790.jpg",
+      image: "/api/placeholder/300/200",
     },
     {
       name: "Crash Course in Machine Learning",
       progress: 50,
-      image:
-        "https://img.freepik.com/free-vector/abstract-business-youtube-thumbnail-template_23-2148720358.jpg",
+      image: "/api/placeholder/300/200",
     },
     {
       name: "Intermediate in Data Science",
       progress: 25,
-      image:
-        "https://img.freepik.com/free-vector/youtube-background-thumbnail-design-template-with-text-full-editable_1361-2730.jpg",
+      image: "/api/placeholder/300/200",
     },
   ];
 
-  const badges = [<FaTrophy key="trophy" />, <FaStar key="star" />, <FaMedal key="medal" />];
-
-  const fetchProfile = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/userinfo");
-      const data = await response.json();
-      if (data && data.name && data.email && data.educationlvl1 && data.profilePicture) {
-        setProfile(data);
-        setTempProfile(data);
+  // Function to get auth token from cookies
+  const getAuthToken = () => {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'authToken') { // Replace 'authToken' with your actual cookie name
+        return value;
       }
-    } catch (error) {
-      console.error("Failed to fetch profile data:", error);
+    }
+    return null;
+  };
+
+  const updateEducationOnServer = async () => {
+    try {
+      setError(null);
+      const token = getAuthToken();
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
+      const requestBody: EducationUpdateRequest = {
+        educationLevel: tempProfile.educationlvl1,
+        schoolingYear: tempProfile.educationlvl2,
+        schoolStream: tempProfile.educationlvl3
+      };
+      
+      const response = await fetch('http://localhost:5001/api/v1/user/web/education', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Add token to headers
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Your session has expired. Please log in again.');
+        }
+        throw new Error(`Failed to update education. Status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+  
+      if (result.success) {
+        setProfile(tempProfile);
+        setIsEditingEducation(false);
+        alert("Education updated successfully!");
+      } else {
+        throw new Error(result.message || "Failed to update education");
+      }
+    } catch (error: any) {
+      console.error("Error updating education:", error);
+      setError(error.message);
+      alert(error.message);
+    }
+  };
+  
+  const handleEducationButtonClick = async () => {
+    if (isEditingEducation) {
+      await updateEducationOnServer();
+    } else {
+      setIsEditingEducation(true);
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  const updateEducationOptions = (level1Value: string) => {
+    let newOptions: EducationOptions = {
+      lvl2: [],
+      lvl3: []
+    };
 
-  const updateProfileOnServer = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/updated-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tempProfile),
-      });
-      if (response.ok) {
-        alert("Profile updated successfully!");
-        await fetchProfile(); // Fetch updated data after API call
-      } else {
-        console.error("Failed to update profile on the server.");
-        alert("Failed to update profile on the server.");
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
+    switch (level1Value) {
+      case "SCHOOL":
+        newOptions = {
+          lvl2: ["ELEVENTH", "TWELFTH"],
+          lvl3: ["SCIENCE", "COMMERCE", "ARTS"]
+        };
+        break;
+      case "UNDERGRADUATE":
+        newOptions = {
+          lvl2: ["BTECH", "BSC"],
+          lvl3: ["FIRST", "SECOND", "THIRD", "FOURTH"]
+        };
+        break;
+      case "POSTGRADUATE":
+        newOptions = {
+          lvl2: ["MTECH", "MSC", "PHD"],
+          lvl3: ["COMPUTER_SCIENCE", "MECHANICAL_ENGINEERING", "ELECTRICAL_ENGINEERING", "CIVIL_ENGINEERING", "CHEMISTRY", "PHYSICS"]
+        };
+        break;
+      default:
+        newOptions = {
+          lvl2: ["ELEVENTH", "TWELFTH"],
+          lvl3: ["SCIENCE", "COMMERCE", "ARTS"]
+        };
     }
+
+    setEducationOptions(newOptions);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,57 +179,48 @@ const Dashboard: React.FC = () => {
   };
 
   const handleEducationChange = (level: string, value: string) => {
-    const updatedProfile = { ...tempProfile, [level]: value };
-
-    // Update dependent education options
-    if (level === "educationlvl1") {
-      if (value === "School") {
-        setEducationOptions({
-          lvl2: ["11th", "12th"],
-          lvl3: ["Science", "Commerce", "Arts"],
-        });
-        updatedProfile.educationlvl2 = "11th";
-        updatedProfile.educationlvl3 = "Science";
-      } else if (value === "Undergraduate") {
-        setEducationOptions({
-          lvl2: ["B.Tech", "B.Sc"],
-          lvl3: ["First Year", "Second Year", "Third Year", "Fourth Year"],
-        });
-        updatedProfile.educationlvl2 = "B.Tech";
-        updatedProfile.educationlvl3 = "First Year";
-      } else if (value === "Postgraduate") {
-        setEducationOptions({
-          lvl2: ["M.Tech", "M.Sc", "PhD"],
-          lvl3: ["Computer Science", "Mechanical", "Electrical", "Civil", "Chemistry", "Physics"],
-        });
-        updatedProfile.educationlvl2 = "M.Tech";
-        updatedProfile.educationlvl3 = "Computer Science";
+    setTempProfile((prev) => {
+      const updated = { ...prev, [level]: value };
+      
+      if (level === "educationlvl1") {
+        updateEducationOptions(value);
+        updated.educationlvl2 = educationOptions.lvl2[0];
+        updated.educationlvl3 = educationOptions.lvl3[0];
       }
-    }
-
-    setTempProfile(updatedProfile);
+      
+      return updated;
+    });
   };
+
+  // Add error display
+  if (error) {
+    return (
+      <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
     <div>
       <Navbar />
-      <div className="flex flex-col lg:flex-row h-screen bg-gray-100">
+      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100">
         {/* Left compartment */}
         <div className="w-full lg:w-1/5 p-6 bg-white border-b lg:border-r border-gray-200">
           {/* Profile Picture */}
-          <div className="w-24 h-24 mx-auto mb-6">
+          <div className="w-24 h-24 mx-auto mb-6 relative">
             <Image
               src={tempProfile.profilePicture}
               alt="Profile Picture"
               width={100}
               height={100}
-              className="rounded-full"
+              className="rounded-full object-cover"
             />
             {isEditingPicture && (
               <input
                 type="file"
                 onChange={handleImageChange}
-                className="mb-10 text-sm"
+                className="absolute top-full left-0 w-full mt-2 text-sm"
                 accept="image/*"
               />
             )}
@@ -148,15 +228,10 @@ const Dashboard: React.FC = () => {
 
           {/* Edit Profile Picture Button */}
           <button
-            onClick={async () => {
-              if (isEditingPicture) {
-                await updateProfileOnServer();
-              }
-              setIsEditingPicture(!isEditingPicture);
-            }}
+            onClick={() => setIsEditingPicture(!isEditingPicture)}
             className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            {isEditingPicture ? "Update Picture" : "Edit Picture"}
+            {isEditingPicture ? "Cancel" : "Edit Picture"}
           </button>
         </div>
 
@@ -175,9 +250,11 @@ const Dashboard: React.FC = () => {
                   onChange={(e) => handleEducationChange("educationlvl1", e.target.value)}
                   className="border rounded p-2 w-full mb-4"
                 >
-                  <option value="School">School</option>
-                  <option value="Undergraduate">Undergraduate</option>
-                  <option value="Postgraduate">Postgraduate</option>
+                  {educationLvl1Options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
 
                 <label className="block font-semibold mb-1">Education Level 2</label>
@@ -186,8 +263,8 @@ const Dashboard: React.FC = () => {
                   onChange={(e) => handleEducationChange("educationlvl2", e.target.value)}
                   className="border rounded p-2 w-full mb-4"
                 >
-                  {educationOptions.lvl2.map((option, idx) => (
-                    <option key={idx} value={option}>
+                  {educationOptions.lvl2.map((option) => (
+                    <option key={option} value={option}>
                       {option}
                     </option>
                   ))}
@@ -199,8 +276,8 @@ const Dashboard: React.FC = () => {
                   onChange={(e) => handleEducationChange("educationlvl3", e.target.value)}
                   className="border rounded p-2 w-full mb-4"
                 >
-                  {educationOptions.lvl3.map((option, idx) => (
-                    <option key={idx} value={option}>
+                  {educationOptions.lvl3.map((option) => (
+                    <option key={option} value={option}>
                       {option}
                     </option>
                   ))}
@@ -216,12 +293,7 @@ const Dashboard: React.FC = () => {
 
             {/* Edit Education Button */}
             <button
-              onClick={async () => {
-                if (isEditingEducation) {
-                  await updateProfileOnServer();
-                }
-                setIsEditingEducation(!isEditingEducation);
-              }}
+              onClick={handleEducationButtonClick}
               className="p-2 bg-green-500 text-white rounded hover:bg-green-600"
             >
               {isEditingEducation ? "Update Education" : "Edit Education"}
@@ -230,43 +302,35 @@ const Dashboard: React.FC = () => {
 
           {/* Courses Section */}
           <div>
-  <h2 className="text-xl font-semibold mb-4">Courses</h2>
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-    {courses.map((course, index) => (
-      <div
-        key={index}
-        className="bg-white p-4 rounded-lg shadow-md flex flex-col justify-between"
-      >
-        <div className="flex flex-col justify-between h-full">
-          {/* Image */}
-          <Image
-            src={course.image}
-            alt={`Course ${index + 1}`}
-            width={300}  // Adjust width for fitting within the card
-            height={200} // Adjust height to maintain aspect ratio
-            className="rounded w-full h-auto object-cover"
-          />
-
-          {/* Course Information (Name & Progress) */}
-          <div className="mt-2">
-            <h3 className="text-md font-bold">{course.name}</h3>
-            <p className="text-gray-500">Progress:{course.progress}%</p>
+            <h2 className="text-xl font-semibold mb-4">Courses</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {courses.map((course, index) => (
+                <div
+                  key={index}
+                  className="bg-white p-4 rounded-lg shadow-md flex flex-col h-full"
+                >
+                  <div className="flex-grow">
+                    <Image
+                      src={course.image}
+                      alt={`Course ${index + 1}`}
+                      width={300}
+                      height={200}
+                      className="rounded w-full h-48 object-cover mb-4"
+                    />
+                    <h3 className="text-md font-bold mb-2">{course.name}</h3>
+                    <p className="text-gray-500">Progress: {course.progress}%</p>
+                  </div>
+                  <div className="mt-4">
+                    <a href={`/course/${encodeURIComponent(course.name)}`}>
+                      <button className="w-full bg-slate-200 hover:bg-slate-300 py-2 px-4 rounded">
+                        View Course
+                      </button>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-
-        {/* View Course Button (aligned to the right) */}
-        <div className="mt-4 flex justify-end">
-          <a href={`/course/${course.name}`}>
-            <button className="bg-slate-200 hover:bg-slate-300 py-1 px-2 rounded">
-              View Course
-            </button>
-          </a>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
-
         </div>
       </div>
     </div>

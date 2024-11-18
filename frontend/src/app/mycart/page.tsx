@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import Navbar from "@/components/navbar"
 
 // Mock data for courses in the cart
 const initialCourses = [
@@ -26,7 +27,8 @@ export default function MyCart() {
   const totalPrice = courses.reduce((sum, course) => sum + course.price, 0)
 
   return (
-    <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 w-[100vw]">
+          <Navbar student={{name:"vj"}} className=''/>
       <h1 className="text-3xl font-bold mb-8">My Cart</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => (
