@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
+import fs from "fs"
 
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -7,7 +8,35 @@ cloudinary.config({
 });
 
 
+const uploadProfile = async (localFilePath) => {
+    try {
+        if (!localFilePath) return null;
+        console.log("reached cloudinary")
 
+        // Upload the file on cloudinary
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "image",
+            folder: "profilePictures", // This will create a folder in cloudinary
+            transformation: [
+                { width: 1920, height: 1080, crop: "fill" },
+                { quality: "auto" }
+            ]
+        });
+
+        // File has been uploaded successfully
+        // console.log("File uploaded successfully on cloudinary", response.url);
+
+        // Remove file from local storage
+        fs.unlinkSync(localFilePath);
+        
+        return response;
+
+    } catch (error) {
+        // Remove the locally saved temporary file as the upload operation failed
+        fs.unlinkSync(localFilePath);
+        return null;
+    }
+};
 
 const uploadContentVideo = async (localFilePath,folderPath) => {
     try {
@@ -27,11 +56,11 @@ const uploadContentVideo = async (localFilePath,folderPath) => {
 
         // file has been uploaded successfull
         //console.log("file is uploaded on cloudinary ", response.url);
-        fs.unlinkSync(localFilePath)
+        await fs.unlink(localFilePath)
         return response;
 
     } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temporary file as the upload operation got failed
+        await fs.unlink(localFilePath) // remove the locally saved temporary file as the upload operation got failed
         return null;
     }
 }
@@ -167,11 +196,31 @@ const deleteBanner= async (publicId) => {
     }
 }
 
+const deleteProfile = async (publicId) => {
+    try {
+        if (!publicId) return null;
+
+        // Delete the file from cloudinary
+        const response = await cloudinary.uploader.destroy(publicId, {
+            resource_type: "image"
+        });
+
+        return response;
+
+    } catch (error) {
+        console.error("Error while deleting file from cloudinary:", error);
+        return null;
+    }
+};
+
+
 export { 
+    uploadProfile,
     uploadContentVideo,
     uploadPromoVideo,
     uploadThumbnail,
     uploadBanner,
    deletePromo,
-   deleteBanner
+   deleteBanner,
+   deleteProfile
 };

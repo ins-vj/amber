@@ -3,7 +3,7 @@ import zod from "zod"
 import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {amber} from "../db/index.js";
-import {uploadBanner,uploadContentVideo,uploadPromoVideo,uploadThumbnail,deletePromo,deleteBanner} from "../utils/cloudinary.js"
+import {uploadBanner,uploadContentVideo,uploadPromoVideo,uploadThumbnail,deletePromo,deleteBanner,uploadProfile} from "../utils/cloudinary.js"
 
 
 const validateSectionData = (data,courseId) => {
@@ -59,7 +59,7 @@ const signup = asyncHandler(async (req, res) => {
         const options = {
           httpOnly: true,
           secure: true,
-
+          sameSite: 'none'
         };
   
         return res
@@ -69,6 +69,7 @@ const signup = asyncHandler(async (req, res) => {
           .json(new ApiResponse(
             isExistingUser ? 200 : 201,
             user,
+            {accessToken:accessToken,refreshToken:refreshToken},
             isExistingUser ? "User logged in successfully" : "User created successfully"
           ));
       }
@@ -461,6 +462,80 @@ const dashboard = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Error while fetching instructor details", error);
     }
 });
+
+const uploadpic=asyncHandler(async(req,res)=>{
+    try {
+        const user = req.user;
+        const profilePictureLocalPath = req.file?.profilePicture;
+
+        if (!profilePictureLocalPath) {
+            throw new ApiError(400, "Profile picture file is required");
+        }
+
+        // Get the current user to check if they have an existing profile picture
+        const currentUser = await amber.instructor.findUnique({
+            where: {
+                id: user.id
+            },
+            select: {
+                profilepicture: true
+            }
+        });
+
+        // Upload new image to Cloudinary
+        const profilePicture = await uploadProfile(profilePictureLocalPath);
+
+        if (!profilePicture?.secure_url) {
+            throw new ApiError(400, "Error while uploading profile picture");
+        }
+
+        // If there's an existing profile picture, delete it from Cloudinary
+        if (currentUser?.profilepicture) {
+            // Extract public_id from the existing URL
+            const publicId = currentUser.profilepicture
+                .split("/")
+                .pop()
+                .split(".")[0];
+            
+            await deleteFromCloudinary(publicId);
+        }
+
+        // Update user profile with new picture URL
+        const updatedInstructor = await amber.instructor.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                profilepicture: profilePicture.secure_url
+            },
+            select: {
+                id: true,
+                username: true,
+                profilepicture: true
+            }
+        });
+
+        return res.status(200).json(
+            new ApiResponse(
+                200, 
+                updatedInstructor,
+                "Profile picture updated successfully"
+            )
+        );
+
+    } catch (error) {
+        // Log the error for debugging
+        console.error("Update Profile Picture Error:", error);
+
+        // If it's already an ApiError, throw it as is
+        if (error instanceof ApiError) {
+            throw error;
+        }
+
+        // For any other error, throw a generic API error
+        throw new ApiError(500, "Error while updating profile picture", error);
+    }
+})
 
 const createCourse=asyncHandler(async(req,res)=>{
       // Store uploaded file URLs for rollback if needed
@@ -1142,6 +1217,7 @@ const updateCourse = asyncHandler(async (req, res) => {
     qualification,
     achievement,
     dashboard,
+    uploadpic,
     createCourse,
     updateCourse
   }

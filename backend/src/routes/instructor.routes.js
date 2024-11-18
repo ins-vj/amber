@@ -6,9 +6,10 @@ import {
     achievement,
     createCourse,
     updateCourse,
-    dashboard
+    dashboard,
+    uploadpic
 } from "../controllers/instructor.controller.js";
-import {upload} from "../middlewares/multer.middleware.js"
+import {upload}from "../middlewares/multer.middleware.js";
 import { verifyJWTw,verifyJWTa,firstJWTw,firstJWTa} from "../middlewares/auth.insmiddleware.js";
 
 
@@ -26,6 +27,8 @@ router.route("/web/achievement").put(verifyJWTw,achievement)
 router.route("/app/qualification").put(verifyJWTa,achievement)
 router.route("/web/dashboard").get(verifyJWTw,dashboard)
 router.route("/app/dashboard").get(verifyJWTa,dashboard)
+router.route("/web/uploadpic").patch(verifyJWTw,upload.single("profilePicture"),uploadpic)
+router.route("/app/uploadpic").patch(verifyJWTa,upload.single("profilePicture"),uploadpic)
 router.route("/web/createcourse").post(verifyJWTw,upload.fields([
     { name: 'image', maxCount: 1 },
     { name: 'banner', maxCount: 1 },

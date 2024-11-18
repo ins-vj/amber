@@ -6,7 +6,7 @@ import {
     dashboard,
     uploadpic
 } from "../controllers/user.controller.js";
-import {upload} from "../middlewares/multer.middleware.js"
+import {upload} from "../middlewares/multer.middleware.js";
 import { verifyJWTw,verifyJWTa,firstJWTw,firstJWTa} from "../middlewares/auth.usermiddleware.js";
 
 
@@ -20,8 +20,8 @@ router.route("/web/education").put(verifyJWTw,education) //for changing from use
 router.route("/app/education").put(verifyJWTa,education) //for changing from user dashboard also
 router.route("/web/dashboard").get(verifyJWTw,dashboard)
 router.route("/app/dashboard").get(verifyJWTa,dashboard)
-router.route("/web/uploadpic").patch(verifyJWTw,upload.single("profilePicture"),uploadpic)
-router.route("/web/uploadpic").patch(verifyJWTa,upload.single("profilePicture"),uploadpic)
+router.route("/web/uploadpic").patch(verifyJWTw,upload.single("profile"),uploadpic)
+router.route("/app/uploadpic").patch(verifyJWTa,upload.single("profile"),uploadpic)
 // router.route("/:username").get( getUserProfile)
 // router.route("/register").post(
 //     upload.fields([

@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 import {amber} from "../db/index.js";
 import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
-import {uploadBanner,uploadContentVideo,uploadPromoVideo,uploadThumbnail} from "../utils/cloudinary.js"
+import {uploadBanner,uploadContentVideo,uploadPromoVideo,uploadThumbnail,uploadProfile, deleteProfile} from "../utils/cloudinary.js"
 
 
 
@@ -30,7 +30,7 @@ const signup = asyncHandler(async (req, res) => {
         const options = {
           httpOnly: true,
           secure: true,
-
+        sameSite: 'none'
         };
   
         return res
@@ -40,6 +40,7 @@ const signup = asyncHandler(async (req, res) => {
           .json(new ApiResponse(
             isExistingUser ? 200 : 201,
             user,
+            {accessToken:accessToken,refreshToken:refreshToken},
             isExistingUser ? "User logged in successfully" : "User created successfully"
           ));
       }
@@ -204,9 +205,67 @@ return res.status(200).json(new ApiResponse(200,returnUser,"UserInfo given"));
 
 })
 
-const uploadpic=asyncHandler(async(req,res)=>{
+const uploadpic = asyncHandler(async (req, res) => {
+    try {
+        const user = req.user;
+        
+        if (!req.file) {
+            throw new ApiError(400, "Profile picture file is required");
+        }
 
-})
+        const profilePictureLocalPath = req.file.path;
+        console.log("Local file path:", profilePictureLocalPath);
+
+        // Get current user
+        const currentUser = await amber.user.findUnique({
+            where: { id: user.id },
+            select: { profilepicture: true }
+        });
+
+        // Upload new image
+        const profilePicture = await uploadProfile(profilePictureLocalPath);
+        
+        if (!profilePicture?.secure_url) {
+            throw new ApiError(400, "Error while uploading profile picture");
+        }
+
+        // Delete old image if exists
+        if (currentUser?.profilepicture) {
+            const publicId = currentUser.profilepicture
+                .split("/")
+                .pop()
+                .split(".")[0];
+            
+            await deleteProfile(publicId);
+        }
+
+        // Update user profile
+        const updatedUser = await amber.user.update({
+            where: { id: user.id },
+            data: { profilepicture: profilePicture.secure_url },
+            select: {
+                id: true,
+                username: true,
+                profilepicture: true
+            }
+        });
+
+        return res.status(200).json(
+            new ApiResponse(200, updatedUser, "Profile picture updated successfully")
+        );
+
+    } catch (error) {
+        console.error("Upload error:", error);
+        
+        // Clean up local file if exists
+        if (req.file?.path) {
+            await fs.unlink(req.file.path).catch(console.error);
+        }
+
+        throw error; // This will be caught by asyncHandler
+    }
+});
+
 
 const getUserProfile = asyncHandler(async(req, res) => {
     const {username} = req.params

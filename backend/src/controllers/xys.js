@@ -65,7 +65,19 @@ const updateCourse = asyncHandler(async (req, res) => {
       if (existingCourse.insId !== user.id) {
         throw new ApiError(403, "Not authorized to update this course");
       }
-    
+  
+      // Validation functions
+      const validateBasicData = (data) => {
+        const errors = [];
+        if (data.price && isNaN(parseInt(data.price))) {
+          errors.push("Price must be a valid number");
+        }
+        if (data.validityPeriod && isNaN(parseInt(data.validityPeriod))) {
+          errors.push("Validity period must be a valid number");
+        }
+        return errors;
+      };
+  
       const validateSection = (section, requireId = false) => {
         if (requireId && !section.id) {
           throw new ApiError(400, "Section ID is required for update operations");
@@ -89,11 +101,11 @@ const updateCourse = asyncHandler(async (req, res) => {
         }
       };
   
-    //   // Validate basic course data
-    //   const basicDataErrors = validateBasicData(req.body);
-    //   if (basicDataErrors.length > 0) {
-    //     throw new ApiError(400, `Validation failed: ${basicDataErrors.join(', ')}`);
-    //   }
+      // Validate basic course data
+      const basicDataErrors = validateBasicData(req.body);
+      if (basicDataErrors.length > 0) {
+        throw new ApiError(400, `Validation failed: ${basicDataErrors.join(', ')}`);
+      }
   
       // Validate arrays
       sectionsToAdd.forEach(section => validateSection(section, false));
