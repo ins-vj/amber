@@ -23,6 +23,7 @@ app.use("/api/v1/user", userRouter)
 app.use("/api/v1/course",courseRouter)
 app.use("/api/v1/instructor",insRouter)
 
+
 app.use((err, req, res, next) => {
   // Check if the error is an instance of ApiError
   if (err instanceof ApiError) {

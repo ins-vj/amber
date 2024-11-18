@@ -96,15 +96,16 @@ model Course {
   insId           Int
   ins             Instructor      @relation(fields: [insId] , references: [id])
   title           String          @unique
-  imageUrl        String
-  description     String
-  prerequisites   String
-  category        String
-  subcategory     String
-  currency        Currency
-  price           Int
-  validityPeriod  Int
-  introvideo      String
+  imageUrl        String?
+  banner          String?
+  description     String?
+  prerequisites   String?
+  category        String?
+  subcategory     String?
+  currency        Currency?
+  price           Int?
+  validityPeriod  Int?
+  introvideo      String?
   openToEveryone  Boolean         @default(false)
   slug            String
   section         Section[]

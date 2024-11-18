@@ -3,10 +3,15 @@ import {
     testing, 
     signup,
     qualification,
-    achievement
+    achievement,
+    createCourse,
+    updateCourse,
+    dashboard
 } from "../controllers/instructor.controller.js";
 import {upload} from "../middlewares/multer.middleware.js"
 import { verifyJWTw,verifyJWTa,firstJWTw,firstJWTa} from "../middlewares/auth.insmiddleware.js";
+
+
 
 
 const router = Router()
@@ -19,4 +24,30 @@ router.route("/web/qualification").put(verifyJWTw,qualification)
 router.route("/app/qualification").put(verifyJWTa,qualification)
 router.route("/web/achievement").put(verifyJWTw,achievement)
 router.route("/app/qualification").put(verifyJWTa,achievement)
+router.route("/web/dashboard").get(verifyJWTw,dashboard)
+router.route("/app/dashboard").get(verifyJWTa,dashboard)
+router.route("/web/createcourse").post(verifyJWTw,upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'banner', maxCount: 1 },
+    { name: 'introvideo', maxCount: 1 },
+    { name: 'sectionVideos', maxCount: 10 } // Adjust maxCount based on your needs
+  ]),createCourse) //add upload middleware
+router.route("/app/createcourse").post(verifyJWTa,upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'banner', maxCount: 1 },
+    { name: 'introvideo', maxCount: 1 },
+    { name: 'sectionVideos', maxCount: 10 } // Adjust maxCount based on your needs
+  ]),createCourse)
+router.route("/web/updateCourse/:courseId").put(verifyJWTw,upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'banner', maxCount: 1 },
+    { name: 'introvideo', maxCount: 1 },
+    { name: 'sectionVideos', maxCount: 10 } // Adjust maxCount based on your needs
+  ]),updateCourse)  
+router.route("/app/updateCourse/:courseId").put(verifyJWTa,upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'banner', maxCount: 1 },
+    { name: 'introvideo', maxCount: 1 },
+    { name: 'sectionVideos', maxCount: 10 } // Adjust maxCount based on your needs
+  ]),updateCourse)   
 export default router
