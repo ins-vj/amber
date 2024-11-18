@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
+import Cookies from 'js-cookie'
 
 export default function Component() {
   const [showPassword, setShowPassword] = useState(false)
@@ -147,10 +148,13 @@ export default function Component() {
         const errorText = await response.text();
         console.error('Non-JSON error response:', errorText);
         alert(`Failed to create account: ${response.statusText || 'Unknown error'}`);
+
         return;
       }
   
       const data = await response.json();
+      console.log('Signup response:', data.data);
+      Cookies.set('accessToken', data.data.accessToken);
       alert('Account created successfully!');
       
     } catch (error) {

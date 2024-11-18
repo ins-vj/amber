@@ -3,14 +3,14 @@ import React from "react";
 import { Home, ShoppingCart, Settings } from "lucide-react";
 import AnimatedIconButton from "./animated-icon-button";
 
-const Navbar = ({ student,className }: {student: any; className?: string}) => {
+const Navbar = ({ student}: any) => {
   // Define a default student if none is passed
   const defaultStudent = { name: "vj", imgUrl: "" };
   const currentStudent = student ?? defaultStudent;
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between bg-[#272729] h-[12vh] px-10 shadow-lg w-full">
-      <div className={`text-4xl font-bold text-white tracking-wide ${className}`}><a href="/home">Amber</a></div>
+      <div className="text-4xl font-bold text-white tracking-wide"><a href="/home">Amber</a></div>
 
       <div className="space-x-8">
         {/* <AnimatedIconButton text="Home" icon="Home" /> */}

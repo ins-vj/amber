@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { FaTrophy, FaStar, FaMedal } from "react-icons/fa";
 import Image from "next/image";
 import Navbar from "@/components/navbar";
+import Cookies from "js-cookie";
 
 interface EducationOptions {
   lvl2: string[];
@@ -50,34 +51,32 @@ const Dashboard: React.FC = () => {
     lvl3: ["SCIENCE", "COMMERCE", "ARTS"],
   });
 
-  const courses = [
-    {
-      name: "Basic Web Development",
-      progress: 75,
-      image: "/api/placeholder/300/200",
-    },
-    {
-      name: "Crash Course in Machine Learning",
-      progress: 50,
-      image: "/api/placeholder/300/200",
-    },
-    {
-      name: "Intermediate in Data Science",
-      progress: 25,
-      image: "/api/placeholder/300/200",
-    },
-  ];
+    const [courses, setCourses] = useState<
+      { name: string; progress: number; image: string }[]
+    >([]);
+
+  // const courses = [
+  //   {
+  //     name: "Basic Web Development",
+  //     progress: 75,
+  //     image: "/api/placeholder/300/200",
+  //   },
+  //   {
+  //     name: "Crash Course in Machine Learning",
+  //     progress: 50,
+  //     image: "/api/placeholder/300/200",
+  //   },
+  //   {
+  //     name: "Intermediate in Data Science",
+  //     progress: 25,
+  //     image: "/api/placeholder/300/200",
+  //   },
+  // ];
 
   // Function to get auth token from cookies
   const getAuthToken = () => {
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'authToken') { // Replace 'authToken' with your actual cookie name
-        return value;
-      }
-    }
-    return null;
+      const value = Cookies.get('accessToken');
+      return value;
   };
 
   const updateEducationOnServer = async () => {
@@ -99,7 +98,7 @@ const Dashboard: React.FC = () => {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Add token to headers
+          'Authorization': `accessToken=${token}` // Add token to headers
         },
         credentials: 'include',
         body: JSON.stringify(requestBody)
@@ -201,9 +200,118 @@ const Dashboard: React.FC = () => {
     );
   }
 
+
+  async function fetchDashboardData() {
+    try {
+      const token = Cookies.get('accessToken'); // Get the token from the cookie
+      console.log('Token:', token); // Log the token value
+      const response = await fetch('http://localhost:5001/api/v1/user/web/dashboard',{
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: `accessToken=${token}`,
+        },
+      });   
+  
+      console.log('Response status:', response.status); // Log the response status
+      console.log('Response headers:', response.headers); // Log the response headers
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData); // Log the error response
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+  
+      const responseData = await response.json();
+      // setData(responseData);
+      setError('');
+      console.log('Dashboard Data:', responseData);
+    } catch (err) {
+      setError(err.message);
+      // setData(null);
+      console.error('Error fetching dashboard data:', err);
+    }
+  }
+
+
+
+
+
+  const fetchData = async () => {
+    try {
+      const token = Cookies.get('accessToken'); // Get the token from the cookie
+      console.log('Token:', token); // Log the token value
+      const response = await fetch('http://localhost:5001/api/v1/user/web/dashboard',{
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: `accessToken=${token}`,
+        },
+      });   
+  
+      console.log('Response status:', response.status); // Log the response status
+      console.log('Response headers:', response.headers); // Log the response headers
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData); // Log the error response
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+  
+      const responseData = await response.json();
+      console.log('Dashboard Data:', responseData);
+
+      if (responseData.success && responseData.data) {
+        setProfile({
+          name: responseData.data.name ?? "Default Name", // Fallback to default if null
+          email: responseData.data.email ?? "example@example.com",
+          educationlvl1: responseData.data.educationLevel ?? "Not Provided",
+          educationlvl2: responseData.data.schoolingYear ?? responseData.data.studyYear ??"Not Provided",
+          educationlvl3: responseData.data.specialization ?? responseData.data.schoolStream ?? responseData.data.degree ?? "Not Provided",
+          profilePicture: responseData.data.profilepicture ?? "/placeholder.svg?height=100&width=100",
+        });
+      } else {
+        setError(responseData.message || "Failed to fetch user data.");
+      }
+
+
+      if (responseData.success && responseData.data.purchases) {
+        const populatedCourses = responseData.data.purchases.slice(0, 3).map((purchase: any) => ({
+          name: purchase.course.title || "Untitled Course",
+          progress: Math.floor(Math.random() * (10 - 5 + 1)) + 5, // Random number between 5 and 10
+          image: purchase.course.imageUrl || "/api/placeholder/300/200",
+        }));
+
+        setCourses(populatedCourses);
+      } else {
+        console.error("No purchases found in the response data.");
+      }
+
+
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+      setError("An error occurred while fetching user data.");
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+
+
+
+
+
+
   return (
     <div>
       <Navbar />
+      <button onClick={fetchDashboardData} className="h-10vh bg-red-700">get user info</button>
       <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100">
         {/* Left compartment */}
         <div className="w-full lg:w-1/5 p-6 bg-white border-b lg:border-r border-gray-200">

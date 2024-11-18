@@ -30,6 +30,7 @@ const signup = asyncHandler(async (req, res) => {
         const options = {
           httpOnly: true,
           secure: true,
+          sameSite: "None",
 
         };
   
@@ -39,7 +40,7 @@ const signup = asyncHandler(async (req, res) => {
           .cookie("refreshToken", refreshToken, options)
           .json(new ApiResponse(
             isExistingUser ? 200 : 201,
-            user,
+            {accessToken: accessToken, refreshToken: refreshToken},
             isExistingUser ? "User logged in successfully" : "User created successfully"
           ));
       }
