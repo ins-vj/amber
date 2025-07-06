@@ -248,42 +248,53 @@ model User{
   @@index([educationLevel]) 
 }
 
-model Instructor{
+model Instructor {
   id              Int             @id @default(autoincrement())
   name            String?
-  username        String         @unique
+  username        String          @unique
   password        String?
   email           String          @unique
-  // githubIns       InsGitHubLink?  @relation("InstructorGithub")
   refresh_token   String?
   profilepicture  String?
-  // linkdinProfile  String?
+
+  // Relations
   course          Course[] 
+  qualification   Qualification[]
+  achievement     Achievement[]
+
   bio             String?        
   contactNumber   String?        
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt    
-  qualification   Qualification[]
-  achievement     Achievement[]
+
+  // Future features (optional)
+  // githubIns       InsGitHubLink?  @relation("InstructorGithub")
+  // linkdinProfile  String?
 }
 
 model Achievement {
-  id           Int         @id @default(autoincrement())
-  title        String
-  referencepic String   
-  year         Int       
-  instructor   Instructor  @relation(fields: [instructorId], references: [id])
-  instructorId Int
+  id            Int         @id @default(autoincrement())
+  title         String
+  referencepic  String   
+  year          Int       
+
+  // Relation to Instructor
+  instructor    Instructor  @relation(fields: [instructorId], references: [id])
+  instructorId  Int
+
   @@index([instructorId, year]) 
 }
 
 model Qualification {
-  id           Int         @id @default(autoincrement())
-  title        String      
-  institution  String
-  year         Int       
-  instructor   Instructor  @relation(fields: [instructorId], references: [id])
-  instructorId Int
+  id            Int         @id @default(autoincrement())
+  title         String      
+  institution   String
+  year          Int       
+
+  // Relation to Instructor
+  instructor    Instructor  @relation(fields: [instructorId], references: [id])
+  instructorId  Int
+
   @@index([instructorId, year])    
 }
 
